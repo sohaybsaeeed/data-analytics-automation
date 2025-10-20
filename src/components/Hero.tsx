@@ -40,11 +40,11 @@ const Hero = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button variant="hero" size="lg" className="group" onClick={() => window.location.href = '/auth'}>
+            <Button variant="hero" size="lg" className="group">
               Start Free Trial
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="outline" size="lg" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>
+            <Button variant="outline" size="lg">
               Watch Demo
             </Button>
           </div>
