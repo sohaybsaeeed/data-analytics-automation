@@ -1,1 +1,4 @@
 project_id = "jsdbmiiytoxjpwkzqxck"
+
+[functions.analyze-dataset]
+verify_jwt = true
