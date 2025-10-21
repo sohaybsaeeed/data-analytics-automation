@@ -24,11 +24,74 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Perform basic statistical analysis
-    const columns = Object.keys(data[0]);
+    // STEP 1: DATA CLEANING
+    console.log('Step 1: Cleaning data...');
+    
+    // Remove duplicate rows
+    const uniqueData = data.filter((row, index, self) => 
+      index === self.findIndex((r) => JSON.stringify(r) === JSON.stringify(row))
+    );
+    console.log(`Removed ${data.length - uniqueData.length} duplicate rows`);
+    
+    // Get all columns
+    const columns = Object.keys(uniqueData[0]);
+    
+    // Clean and normalize data
+    const cleanedData = uniqueData.map(row => {
+      const cleanedRow: any = {};
+      columns.forEach(col => {
+        let value = row[col];
+        
+        // Handle missing values
+        if (value === null || value === undefined || value === '' || value === 'N/A' || value === 'null') {
+          cleanedRow[col] = null;
+          return;
+        }
+        
+        // Try to parse as number
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue) && isFinite(numValue)) {
+          cleanedRow[col] = numValue;
+        } else {
+          // Keep as string, trim whitespace
+          cleanedRow[col] = String(value).trim();
+        }
+      });
+      return cleanedRow;
+    });
+    
+    // Remove rows with all null values
+    const validData = cleanedData.filter(row => 
+      Object.values(row).some(v => v !== null)
+    );
+    
+    console.log(`Cleaned dataset: ${validData.length} valid rows`);
+    
+    const dataQualityReport = {
+      originalRows: data.length,
+      duplicatesRemoved: data.length - uniqueData.length,
+      invalidRowsRemoved: cleanedData.length - validData.length,
+      finalRows: validData.length,
+      missingValuesPerColumn: {} as any
+    };
+    
+    // Count missing values per column
+    columns.forEach(col => {
+      const missingCount = validData.filter(row => row[col] === null).length;
+      if (missingCount > 0) {
+        dataQualityReport.missingValuesPerColumn[col] = {
+          count: missingCount,
+          percentage: ((missingCount / validData.length) * 100).toFixed(2)
+        };
+      }
+    });
+
+    // STEP 2: EXPLORATORY DATA ANALYSIS
+    console.log('Step 2: Performing EDA...');
+    
     const numericColumns = columns.filter(col => {
-      const values = data.map(row => row[col]).filter(v => v !== null && v !== undefined && v !== '');
-      return values.length > 0 && values.every(v => !isNaN(parseFloat(v)) && isFinite(parseFloat(v)));
+      const values = validData.map(row => row[col]).filter(v => v !== null);
+      return values.length > 0 && values.every(v => typeof v === 'number');
     });
     
     const categoricalColumns = columns.filter(col => !numericColumns.includes(col));
@@ -36,7 +99,9 @@ serve(async (req) => {
     // Calculate descriptive statistics
     const descriptiveStats: any = {};
     numericColumns.forEach(col => {
-      const values = data.map(row => parseFloat(row[col])).filter(v => !isNaN(v));
+      const values = validData.map(row => row[col]).filter(v => v !== null) as number[];
+      if (values.length === 0) return;
+      
       values.sort((a, b) => a - b);
       
       const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
@@ -46,29 +111,159 @@ serve(async (req) => {
       const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
       const stdDev = Math.sqrt(variance);
       
+      // Calculate quartiles
+      const q1Index = Math.floor(values.length * 0.25);
+      const q3Index = Math.floor(values.length * 0.75);
+      const q1 = values[q1Index];
+      const q3 = values[q3Index];
+      const iqr = q3 - q1;
+      
+      // Detect outliers using IQR method
+      const lowerBound = q1 - 1.5 * iqr;
+      const upperBound = q3 + 1.5 * iqr;
+      const outliers = values.filter(v => v < lowerBound || v > upperBound);
+      
       descriptiveStats[col] = {
         mean,
         median,
         stdDev,
         min: values[0],
         max: values[values.length - 1],
-        count: values.length
+        count: values.length,
+        q1,
+        q3,
+        iqr,
+        outlierCount: outliers.length,
+        skewness: calculateSkewness(values, mean, stdDev),
+        kurtosis: calculateKurtosis(values, mean, stdDev)
       };
     });
+    
+    // Helper functions for skewness and kurtosis
+    function calculateSkewness(values: number[], mean: number, stdDev: number): number {
+      if (stdDev === 0) return 0;
+      const n = values.length;
+      const sum = values.reduce((acc, val) => acc + Math.pow((val - mean) / stdDev, 3), 0);
+      return (n * sum) / ((n - 1) * (n - 2));
+    }
+    
+    function calculateKurtosis(values: number[], mean: number, stdDev: number): number {
+      if (stdDev === 0) return 0;
+      const n = values.length;
+      const sum = values.reduce((acc, val) => acc + Math.pow((val - mean) / stdDev, 4), 0);
+      return (n * (n + 1) * sum) / ((n - 1) * (n - 2) * (n - 3)) - (3 * Math.pow(n - 1, 2)) / ((n - 2) * (n - 3));
+    }
 
-    // Perform regression analysis between numeric columns
+    // STEP 3: CLUSTERING ANALYSIS
+    console.log('Step 3: Performing clustering...');
+    
+    const clusteringResults: any = {};
+    if (numericColumns.length >= 2) {
+      // Normalize data for clustering
+      const normalizedData = validData.map(row => {
+        const normalized: any = {};
+        numericColumns.slice(0, 3).forEach(col => {
+          const value = row[col];
+          if (value !== null && descriptiveStats[col]) {
+            const mean = descriptiveStats[col].mean;
+            const stdDev = descriptiveStats[col].stdDev;
+            normalized[col] = stdDev > 0 ? (value - mean) / stdDev : 0;
+          }
+        });
+        return normalized;
+      }).filter(row => Object.keys(row).length > 0);
+      
+      // K-means clustering (k=3)
+      const k = Math.min(3, Math.floor(validData.length / 10));
+      if (k >= 2 && normalizedData.length >= k) {
+        const clusters = performKMeans(normalizedData, k, numericColumns.slice(0, 3));
+        clusteringResults.method = 'K-Means';
+        clusteringResults.k = k;
+        clusteringResults.clusters = clusters.assignments.reduce((acc: any, cluster: number) => {
+          acc[cluster] = (acc[cluster] || 0) + 1;
+          return acc;
+        }, {});
+        clusteringResults.centroids = clusters.centroids;
+        
+        // Add cluster assignments to data
+        validData.forEach((row, idx) => {
+          if (idx < clusters.assignments.length) {
+            row['cluster'] = clusters.assignments[idx];
+          }
+        });
+      }
+    }
+    
+    // K-means implementation
+    function performKMeans(data: any[], k: number, features: string[]) {
+      const maxIterations = 100;
+      const centroids: any[] = [];
+      
+      // Initialize centroids randomly
+      for (let i = 0; i < k; i++) {
+        const randomIdx = Math.floor(Math.random() * data.length);
+        centroids.push({ ...data[randomIdx] });
+      }
+      
+      let assignments = new Array(data.length).fill(0);
+      
+      for (let iter = 0; iter < maxIterations; iter++) {
+        // Assign points to nearest centroid
+        const newAssignments = data.map((point, idx) => {
+          let minDist = Infinity;
+          let cluster = 0;
+          
+          centroids.forEach((centroid, cIdx) => {
+            const dist = features.reduce((sum, feat) => {
+              const diff = (point[feat] || 0) - (centroid[feat] || 0);
+              return sum + diff * diff;
+            }, 0);
+            
+            if (dist < minDist) {
+              minDist = dist;
+              cluster = cIdx;
+            }
+          });
+          
+          return cluster;
+        });
+        
+        // Check convergence
+        if (JSON.stringify(newAssignments) === JSON.stringify(assignments)) {
+          break;
+        }
+        
+        assignments = newAssignments;
+        
+        // Update centroids
+        for (let c = 0; c < k; c++) {
+          const clusterPoints = data.filter((_, idx) => assignments[idx] === c);
+          if (clusterPoints.length > 0) {
+            features.forEach(feat => {
+              const sum = clusterPoints.reduce((s, p) => s + (p[feat] || 0), 0);
+              centroids[c][feat] = sum / clusterPoints.length;
+            });
+          }
+        }
+      }
+      
+      return { assignments, centroids };
+    }
+
+    // STEP 4: REGRESSION ANALYSIS
+    console.log('Step 4: Performing regression analysis...');
+    
     const regressionResults: any[] = [];
     if (numericColumns.length >= 2) {
-      // Take first two numeric columns for regression
       for (let i = 0; i < Math.min(numericColumns.length - 1, 3); i++) {
         for (let j = i + 1; j < Math.min(numericColumns.length, 3); j++) {
           const xCol = numericColumns[i];
           const yCol = numericColumns[j];
           
-          const pairs = data.map(row => ({
-            x: parseFloat(row[xCol]),
-            y: parseFloat(row[yCol])
-          })).filter(p => !isNaN(p.x) && !isNaN(p.y));
+          const pairs = validData.map(row => ({
+            x: row[xCol] as number,
+            y: row[yCol] as number
+          })).filter(p => p.x !== null && p.y !== null);
           
           if (pairs.length > 0) {
             const n = pairs.length;
@@ -103,17 +298,20 @@ serve(async (req) => {
       }
     }
 
-    // Generate visualizations
+    // STEP 5: GENERATE VISUALIZATIONS
+    console.log('Step 5: Generating visualizations...');
+    
     const visualizations: any[] = [];
     
     // Bar chart for first categorical vs numeric
     if (categoricalColumns.length > 0 && numericColumns.length > 0) {
-      const catCol = categoricalColumns[0];
+      const catCol = categoricalColumns.filter(c => c !== 'cluster')[0];
       const numCol = numericColumns[0];
-      const grouped = data.reduce((acc: any, row) => {
+      const grouped = validData.reduce((acc: any, row) => {
         const key = row[catCol];
         if (!acc[key]) acc[key] = [];
-        acc[key].push(parseFloat(row[numCol]));
+        const value = row[numCol];
+        if (value !== null) acc[key].push(value);
         return acc;
       }, {});
       
@@ -135,10 +333,10 @@ serve(async (req) => {
     // Line chart for first numeric column over index
     if (numericColumns.length > 0) {
       const numCol = numericColumns[0];
-      const chartData = data.slice(0, 50).map((row, idx) => ({
+      const chartData = validData.slice(0, 50).map((row, idx) => ({
         index: idx + 1,
-        [numCol]: parseFloat(row[numCol])
-      }));
+        [numCol]: row[numCol]
+      })).filter(d => d[numCol] !== null);
       
       visualizations.push({
         type: 'line',
@@ -150,13 +348,14 @@ serve(async (req) => {
       });
     }
     
-    // Scatter plot for regression
+    // Scatter plot for regression with clusters
     if (regressionResults.length > 0) {
       const reg = regressionResults[0];
-      const chartData = data.slice(0, 100).map(row => ({
-        [reg.xColumn]: parseFloat(row[reg.xColumn]),
-        [reg.yColumn]: parseFloat(row[reg.yColumn])
-      })).filter(p => !isNaN(p[reg.xColumn]) && !isNaN(p[reg.yColumn]));
+      const chartData = validData.slice(0, 100).map(row => ({
+        [reg.xColumn]: row[reg.xColumn],
+        [reg.yColumn]: row[reg.yColumn],
+        cluster: row['cluster']
+      })).filter(p => p[reg.xColumn] !== null && p[reg.yColumn] !== null);
       
       visualizations.push({
         type: 'scatter',
@@ -168,18 +367,21 @@ serve(async (req) => {
       });
     }
 
-    // Prepare dataset summary for AI
+    // Prepare comprehensive dataset summary for AI
     const summary = {
-      totalRows: data.length,
+      dataQuality: dataQualityReport,
+      totalRows: validData.length,
       columns: columns.length,
       numericColumns,
       categoricalColumns,
       descriptiveStats,
+      clustering: clusteringResults,
       regressionResults,
-      sampleData: data.slice(0, 5)
+      sampleData: validData.slice(0, 5)
     };
 
-    // Generate AI-powered insights
+    // STEP 6: GENERATE AI-POWERED INSIGHTS
+    console.log('Step 6: Generating AI insights...');
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -191,11 +393,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a data analyst expert. Analyze datasets and provide actionable insights in JSON format with these fields: type (trend/correlation/outlier/pattern), title, description, confidence_score (0-1).'
+            content: 'You are a data scientist expert. Analyze cleaned and preprocessed datasets with clustering and EDA results. Provide actionable insights in JSON format with these fields: type (trend/correlation/outlier/pattern/cluster), title, description, confidence_score (0-1). Focus on data quality issues, cluster characteristics, statistical anomalies, and meaningful patterns.'
           },
           {
             role: 'user',
-            content: `Analyze this dataset and provide 3-5 key insights:\n${JSON.stringify(summary, null, 2)}\n\nFull dataset preview:\n${JSON.stringify(data.slice(0, 20), null, 2)}`
+            content: `Analyze this preprocessed dataset and provide 5-7 key insights based on:\n\n1. Data Quality Report: ${JSON.stringify(summary.dataQuality, null, 2)}\n\n2. Statistical Summary: ${JSON.stringify(summary.descriptiveStats, null, 2)}\n\n3. Clustering Results: ${JSON.stringify(summary.clustering, null, 2)}\n\n4. Regression Analysis: ${JSON.stringify(summary.regressionResults, null, 2)}\n\n5. Sample Data: ${JSON.stringify(validData.slice(0, 10), null, 2)}`
           }
         ],
         tools: [{
@@ -245,26 +447,38 @@ serve(async (req) => {
       insights = args.insights || [];
     }
 
-    // Fallback: basic statistical insights
+    // Fallback: basic insights from preprocessing
     if (insights.length === 0) {
       insights = [
         {
           type: 'pattern',
-          title: 'Dataset Overview',
-          description: `Dataset contains ${data.length} rows and ${columns.length} columns (${numericColumns.length} numeric, ${categoricalColumns.length} categorical).`,
+          title: 'Data Quality Overview',
+          description: `Dataset cleaned from ${dataQualityReport.originalRows} to ${dataQualityReport.finalRows} rows. Removed ${dataQualityReport.duplicatesRemoved} duplicates and ${dataQualityReport.invalidRowsRemoved} invalid rows. Contains ${numericColumns.length} numeric and ${categoricalColumns.length} categorical columns.`,
           confidence_score: 1.0
         }
       ];
+      
+      if (Object.keys(clusteringResults).length > 0) {
+        insights.push({
+          type: 'cluster',
+          title: 'Clustering Analysis',
+          description: `K-means clustering identified ${clusteringResults.k} distinct groups in the data. Cluster distribution: ${JSON.stringify(clusteringResults.clusters)}`,
+          confidence_score: 0.85
+        });
+      }
     }
 
     return new Response(
       JSON.stringify({ 
         insights,
+        dataQuality: dataQualityReport,
         statistics: {
           descriptive: descriptiveStats,
-          regression: regressionResults
+          regression: regressionResults,
+          clustering: clusteringResults
         },
-        visualizations
+        visualizations,
+        cleanedDataSample: validData.slice(0, 10)
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

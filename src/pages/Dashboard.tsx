@@ -20,6 +20,8 @@ const Dashboard = () => {
   const [dataset, setDataset] = useState<any[] | null>(null);
   const [statistics, setStatistics] = useState<any>(null);
   const [visualizations, setVisualizations] = useState<any[]>([]);
+  const [dataQuality, setDataQuality] = useState<any>(null);
+  const [processingStatus, setProcessingStatus] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -144,6 +146,8 @@ const Dashboard = () => {
     }
 
     setAnalyzing(true);
+    setProcessingStatus('Cleaning data...');
+    
     try {
       const { data: analysisResult, error } = await supabase.functions.invoke('analyze-dataset', {
         body: { data: data.slice(0, 100) } // Send first 100 rows for analysis
@@ -155,12 +159,15 @@ const Dashboard = () => {
         setInsights(analysisResult.insights);
         setStatistics(analysisResult.statistics);
         setVisualizations(analysisResult.visualizations || []);
-        toast.success(`Generated ${analysisResult.insights.length} insights`);
+        setDataQuality(analysisResult.dataQuality || null);
+        setProcessingStatus('');
+        toast.success(`Data cleaned, clustered, and analyzed successfully. ${analysisResult.dataQuality?.finalRows || 0} valid rows processed.`);
       } else {
         toast.error("No insights generated");
       }
     } catch (error: any) {
       console.error('Analysis error:', error);
+      setProcessingStatus('');
       toast.error(error.message || "Failed to analyze data");
     } finally {
       setAnalyzing(false);
@@ -262,7 +269,12 @@ const Dashboard = () => {
                     variant="hero"
                     className="w-full"
                   >
-                    {analyzing ? "Analyzing..." : "Generate Insights"}
+                    {analyzing ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <span>Processing...</span>
+                        {processingStatus && <span className="text-xs">{processingStatus}</span>}
+                      </div>
+                    ) : "Generate Insights"}
                   </Button>
                 </CardContent>
               </Card>
@@ -271,12 +283,61 @@ const Dashboard = () => {
         </div>
 
         {insights.length > 0 && (
-          <Tabs defaultValue="insights" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+          <Tabs defaultValue="quality" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="quality">Data Quality</TabsTrigger>
               <TabsTrigger value="insights">AI Insights</TabsTrigger>
               <TabsTrigger value="visualizations">Visualizations</TabsTrigger>
               <TabsTrigger value="statistics">Statistics</TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="quality" className="space-y-4">
+              <h2 className="text-2xl font-bold">Data Quality Report</h2>
+              {dataQuality && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Preprocessing Summary</CardTitle>
+                    <CardDescription>Data cleaning and validation results</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Original Rows</p>
+                        <p className="text-2xl font-bold">{dataQuality.originalRows}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Duplicates Removed</p>
+                        <p className="text-2xl font-bold text-orange-600">{dataQuality.duplicatesRemoved}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Invalid Rows</p>
+                        <p className="text-2xl font-bold text-red-600">{dataQuality.invalidRowsRemoved}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Final Valid Rows</p>
+                        <p className="text-2xl font-bold text-green-600">{dataQuality.finalRows}</p>
+                      </div>
+                    </div>
+                    
+                    {Object.keys(dataQuality.missingValuesPerColumn || {}).length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-semibold">Missing Values by Column</h4>
+                        <div className="space-y-2">
+                          {Object.entries(dataQuality.missingValuesPerColumn).map(([col, info]: [string, any]) => (
+                            <div key={col} className="flex justify-between items-center p-2 bg-muted rounded">
+                              <span className="font-medium">{col}</span>
+                              <span className="text-sm">
+                                {info.count} missing ({info.percentage}%)
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
 
             <TabsContent value="insights" className="space-y-4">
               <h2 className="text-2xl font-bold">AI-Generated Insights</h2>
@@ -360,23 +421,61 @@ const Dashboard = () => {
                     <Card>
                       <CardHeader>
                         <CardTitle>Descriptive Statistics</CardTitle>
+                        <CardDescription>Comprehensive statistical summary with outlier detection</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="space-y-4">
                           {Object.entries(statistics.descriptive).map(([column, stats]: [string, any]) => (
-                            <Card key={column}>
-                              <CardHeader>
-                                <CardTitle className="text-base">{column}</CardTitle>
-                              </CardHeader>
-                              <CardContent className="text-sm space-y-1">
-                                <p><span className="font-semibold">Mean:</span> {stats.mean?.toFixed(2)}</p>
-                                <p><span className="font-semibold">Median:</span> {stats.median?.toFixed(2)}</p>
-                                <p><span className="font-semibold">Std Dev:</span> {stats.stdDev?.toFixed(2)}</p>
-                                <p><span className="font-semibold">Min:</span> {stats.min?.toFixed(2)}</p>
-                                <p><span className="font-semibold">Max:</span> {stats.max?.toFixed(2)}</p>
-                              </CardContent>
-                            </Card>
+                            <div key={column} className="space-y-2 border rounded-lg p-4">
+                              <h4 className="font-semibold">{column}</h4>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                                <div><span className="text-muted-foreground">Mean:</span> {stats.mean?.toFixed(2)}</div>
+                                <div><span className="text-muted-foreground">Median:</span> {stats.median?.toFixed(2)}</div>
+                                <div><span className="text-muted-foreground">Std Dev:</span> {stats.stdDev?.toFixed(2)}</div>
+                                <div><span className="text-muted-foreground">Min:</span> {stats.min?.toFixed(2)}</div>
+                                <div><span className="text-muted-foreground">Max:</span> {stats.max?.toFixed(2)}</div>
+                                <div><span className="text-muted-foreground">Count:</span> {stats.count}</div>
+                                <div><span className="text-muted-foreground">Q1:</span> {stats.q1?.toFixed(2)}</div>
+                                <div><span className="text-muted-foreground">Q3:</span> {stats.q3?.toFixed(2)}</div>
+                                <div><span className="text-muted-foreground">IQR:</span> {stats.iqr?.toFixed(2)}</div>
+                                <div><span className="text-muted-foreground">Outliers:</span> <span className="text-orange-600 font-medium">{stats.outlierCount}</span></div>
+                                <div><span className="text-muted-foreground">Skewness:</span> {stats.skewness?.toFixed(3)}</div>
+                                <div><span className="text-muted-foreground">Kurtosis:</span> {stats.kurtosis?.toFixed(3)}</div>
+                              </div>
+                            </div>
                           ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  
+                  {statistics.clustering && Object.keys(statistics.clustering).length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Clustering Analysis</CardTitle>
+                        <CardDescription>K-means clustering results</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Method:</span>
+                            <span className="font-medium">{statistics.clustering.method}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Number of Clusters:</span>
+                            <span className="font-medium">{statistics.clustering.k}</span>
+                          </div>
+                          <div className="mt-4">
+                            <h4 className="font-semibold mb-2">Cluster Distribution</h4>
+                            <div className="space-y-2">
+                              {Object.entries(statistics.clustering.clusters || {}).map(([cluster, count]: [string, any]) => (
+                                <div key={cluster} className="flex justify-between items-center p-2 bg-muted rounded">
+                                  <span>Cluster {parseInt(cluster) + 1}</span>
+                                  <span className="font-medium">{count} points</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
