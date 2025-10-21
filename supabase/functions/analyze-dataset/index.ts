@@ -26,11 +26,147 @@ serve(async (req) => {
 
     // Perform basic statistical analysis
     const columns = Object.keys(data[0]);
-    const numericColumns = columns.filter(col => 
-      data.every(row => !isNaN(parseFloat(row[col])) && isFinite(row[col]))
-    );
+    const numericColumns = columns.filter(col => {
+      const values = data.map(row => row[col]).filter(v => v !== null && v !== undefined && v !== '');
+      return values.length > 0 && values.every(v => !isNaN(parseFloat(v)) && isFinite(parseFloat(v)));
+    });
     
     const categoricalColumns = columns.filter(col => !numericColumns.includes(col));
+
+    // Calculate descriptive statistics
+    const descriptiveStats: any = {};
+    numericColumns.forEach(col => {
+      const values = data.map(row => parseFloat(row[col])).filter(v => !isNaN(v));
+      values.sort((a, b) => a - b);
+      
+      const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+      const median = values.length % 2 === 0 
+        ? (values[values.length / 2 - 1] + values[values.length / 2]) / 2 
+        : values[Math.floor(values.length / 2)];
+      const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+      const stdDev = Math.sqrt(variance);
+      
+      descriptiveStats[col] = {
+        mean,
+        median,
+        stdDev,
+        min: values[0],
+        max: values[values.length - 1],
+        count: values.length
+      };
+    });
+
+    // Perform regression analysis between numeric columns
+    const regressionResults: any[] = [];
+    if (numericColumns.length >= 2) {
+      // Take first two numeric columns for regression
+      for (let i = 0; i < Math.min(numericColumns.length - 1, 3); i++) {
+        for (let j = i + 1; j < Math.min(numericColumns.length, 3); j++) {
+          const xCol = numericColumns[i];
+          const yCol = numericColumns[j];
+          
+          const pairs = data.map(row => ({
+            x: parseFloat(row[xCol]),
+            y: parseFloat(row[yCol])
+          })).filter(p => !isNaN(p.x) && !isNaN(p.y));
+          
+          if (pairs.length > 0) {
+            const n = pairs.length;
+            const sumX = pairs.reduce((sum, p) => sum + p.x, 0);
+            const sumY = pairs.reduce((sum, p) => sum + p.y, 0);
+            const sumXY = pairs.reduce((sum, p) => sum + p.x * p.y, 0);
+            const sumX2 = pairs.reduce((sum, p) => sum + p.x * p.x, 0);
+            const sumY2 = pairs.reduce((sum, p) => sum + p.y * p.y, 0);
+            
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            
+            const meanX = sumX / n;
+            const meanY = sumY / n;
+            const ssTotal = pairs.reduce((sum, p) => sum + Math.pow(p.y - meanY, 2), 0);
+            const ssResidual = pairs.reduce((sum, p) => sum + Math.pow(p.y - (slope * p.x + intercept), 2), 0);
+            const rSquared = 1 - (ssResidual / ssTotal);
+            
+            const correlation = (n * sumXY - sumX * sumY) / 
+              Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+            
+            regressionResults.push({
+              xColumn: xCol,
+              yColumn: yCol,
+              slope,
+              intercept,
+              rSquared,
+              correlation
+            });
+          }
+        }
+      }
+    }
+
+    // Generate visualizations
+    const visualizations: any[] = [];
+    
+    // Bar chart for first categorical vs numeric
+    if (categoricalColumns.length > 0 && numericColumns.length > 0) {
+      const catCol = categoricalColumns[0];
+      const numCol = numericColumns[0];
+      const grouped = data.reduce((acc: any, row) => {
+        const key = row[catCol];
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(parseFloat(row[numCol]));
+        return acc;
+      }, {});
+      
+      const chartData = Object.entries(grouped).map(([key, values]: [string, any]) => ({
+        [catCol]: key,
+        [numCol]: values.reduce((sum: number, v: number) => sum + v, 0) / values.length
+      })).slice(0, 10);
+      
+      visualizations.push({
+        type: 'bar',
+        title: `Average ${numCol} by ${catCol}`,
+        description: `Distribution of ${numCol} across different ${catCol} categories`,
+        xAxis: catCol,
+        yAxis: numCol,
+        data: chartData
+      });
+    }
+    
+    // Line chart for first numeric column over index
+    if (numericColumns.length > 0) {
+      const numCol = numericColumns[0];
+      const chartData = data.slice(0, 50).map((row, idx) => ({
+        index: idx + 1,
+        [numCol]: parseFloat(row[numCol])
+      }));
+      
+      visualizations.push({
+        type: 'line',
+        title: `${numCol} Trend`,
+        description: `Trend of ${numCol} over observations`,
+        xAxis: 'index',
+        yAxis: numCol,
+        data: chartData
+      });
+    }
+    
+    // Scatter plot for regression
+    if (regressionResults.length > 0) {
+      const reg = regressionResults[0];
+      const chartData = data.slice(0, 100).map(row => ({
+        [reg.xColumn]: parseFloat(row[reg.xColumn]),
+        [reg.yColumn]: parseFloat(row[reg.yColumn])
+      })).filter(p => !isNaN(p[reg.xColumn]) && !isNaN(p[reg.yColumn]));
+      
+      visualizations.push({
+        type: 'scatter',
+        title: `${reg.xColumn} vs ${reg.yColumn}`,
+        description: `Correlation: ${reg.correlation.toFixed(3)}, R²: ${reg.rSquared.toFixed(3)}`,
+        xAxis: reg.xColumn,
+        yAxis: reg.yColumn,
+        data: chartData
+      });
+    }
 
     // Prepare dataset summary for AI
     const summary = {
@@ -38,6 +174,8 @@ serve(async (req) => {
       columns: columns.length,
       numericColumns,
       categoricalColumns,
+      descriptiveStats,
+      regressionResults,
       sampleData: data.slice(0, 5)
     };
 
@@ -120,7 +258,14 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ insights }),
+      JSON.stringify({ 
+        insights,
+        statistics: {
+          descriptive: descriptiveStats,
+          regression: regressionResults
+        },
+        visualizations
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
