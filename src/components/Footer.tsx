@@ -12,7 +12,7 @@ const Footer = () => {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">InsightFlow</span>
+              <span className="text-xl font-bold">Data Analytics Automation</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Transform raw data into actionable insights with the power of AI.
@@ -51,7 +51,7 @@ const Footer = () => {
         </div>
         
         <div className="pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          © {currentYear} InsightFlow. All rights reserved.
+          © {currentYear} Data Analytics Automation. All rights reserved.
         </div>
       </div>
     </footer>

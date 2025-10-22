@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import { Upload, TrendingUp, LogOut, Sparkles, Database, BarChart3 } from "lucide-react";
+import { Upload, TrendingUp, LogOut, Sparkles, Database, BarChart3, FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
 import { DetailedStatisticsDialog } from "@/components/DetailedStatisticsDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DataOrganizationDialog from "@/components/DataOrganizationDialog";
+import ManualDataOrganizer from "@/components/ManualDataOrganizer";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -25,6 +27,9 @@ const Dashboard = () => {
   const [dataQuality, setDataQuality] = useState<any>(null);
   const [processingStatus, setProcessingStatus] = useState<string>('');
   const [chartTypes, setChartTypes] = useState<{ [key: number]: string }>({});
+  const [showOrganizationDialog, setShowOrganizationDialog] = useState(false);
+  const [showManualOrganizer, setShowManualOrganizer] = useState(false);
+  const [pendingData, setPendingData] = useState<{ file: File; data: any[]; fields: string[]; sourceType: string } | null>(null);
   const navigate = useNavigate();
   
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))', '#8884d8', '#82ca9d', '#ffc658', '#ff7c7c'];
@@ -136,12 +141,37 @@ const Dashboard = () => {
       if (error) throw error;
 
       toast.success(`Uploaded ${data.length} rows from ${sourceType.toUpperCase()}`);
-      handleAnalyzeData(data);
+      
+      // Store data and show organization dialog
+      setPendingData({ file, data, fields, sourceType });
+      setShowOrganizationDialog(true);
     } catch (error: any) {
       toast.error(error.message || "Failed to save dataset");
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleOrganizationChoice = (choice: 'ai' | 'manual') => {
+    setShowOrganizationDialog(false);
+    
+    if (choice === 'ai') {
+      if (pendingData) {
+        toast.info("AI will automatically organize and analyze your data");
+        handleAnalyzeData(pendingData.data);
+        setPendingData(null);
+      }
+    } else {
+      setShowManualOrganizer(true);
+    }
+  };
+
+  const handleManualOrganizationConfirm = (organizedData: any[], selectedColumns: string[]) => {
+    setShowManualOrganizer(false);
+    setDataset(organizedData);
+    toast.success(`Data organized: ${selectedColumns.length} columns selected`);
+    handleAnalyzeData(organizedData);
+    setPendingData(null);
   };
 
   const handleAnalyzeData = async (data: any[]) => {
@@ -204,7 +234,7 @@ const Dashboard = () => {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">InsightFlow</span>
+              <span className="text-xl font-bold">Data Analytics Automation</span>
             </div>
             <Button variant="ghost" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
@@ -587,6 +617,20 @@ const Dashboard = () => {
           </Tabs>
         )}
       </main>
+      
+      <DataOrganizationDialog 
+        open={showOrganizationDialog} 
+        onChoice={handleOrganizationChoice} 
+      />
+      
+      {showManualOrganizer && pendingData && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <ManualDataOrganizer
+            data={pendingData.data}
+            onConfirm={handleManualOrganizationConfirm}
+          />
+        </div>
+      )}
     </div>
   );
 };
