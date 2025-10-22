@@ -250,10 +250,13 @@ serve(async (req) => {
       return { assignments, centroids };
     }
 
-    // STEP 4: REGRESSION ANALYSIS
+    // STEP 4: REGRESSION ANALYSIS (Linear & Logistic)
     console.log('Step 4: Performing regression analysis...');
     
     const regressionResults: any[] = [];
+    const logisticRegressionResults: any[] = [];
+    
+    // Linear Regression
     if (numericColumns.length >= 2) {
       for (let i = 0; i < Math.min(numericColumns.length - 1, 3); i++) {
         for (let j = i + 1; j < Math.min(numericColumns.length, 3); j++) {
@@ -286,24 +289,103 @@ serve(async (req) => {
               Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
             
             regressionResults.push({
+              type: 'linear',
               xColumn: xCol,
               yColumn: yCol,
               slope,
               intercept,
               rSquared,
-              correlation
+              correlation,
+              equation: `y = ${slope.toFixed(4)}x + ${intercept.toFixed(4)}`
             });
           }
         }
       }
     }
+    
+    // Logistic Regression (for binary classification)
+    if (numericColumns.length >= 1) {
+      // Find binary categorical columns (columns with exactly 2 unique values)
+      const binaryColumns = categoricalColumns.filter(col => {
+        const uniqueVals = [...new Set(validData.map(row => row[col]).filter(v => v !== null))];
+        return uniqueVals.length === 2;
+      });
+      
+      if (binaryColumns.length > 0 && numericColumns.length > 0) {
+        const targetCol = binaryColumns[0];
+        const featureCol = numericColumns[0];
+        
+        // Encode binary target as 0 and 1
+        const uniqueVals = [...new Set(validData.map(row => row[targetCol]).filter(v => v !== null))];
+        const pairs = validData.map(row => ({
+          x: row[featureCol] as number,
+          y: row[targetCol] === uniqueVals[0] ? 0 : 1
+        })).filter(p => p.x !== null && p.y !== null && !isNaN(p.y));
+        
+        if (pairs.length > 10) {
+          // Simple logistic regression using gradient descent
+          let w = 0; // weight
+          let b = 0; // bias
+          const learningRate = 0.01;
+          const iterations = 1000;
+          
+          // Normalize features
+          const xValues = pairs.map(p => p.x);
+          const xMean = xValues.reduce((sum, v) => sum + v, 0) / xValues.length;
+          const xStd = Math.sqrt(xValues.reduce((sum, v) => sum + Math.pow(v - xMean, 2), 0) / xValues.length);
+          
+          const normalizedPairs = pairs.map(p => ({
+            x: xStd > 0 ? (p.x - xMean) / xStd : 0,
+            y: p.y
+          }));
+          
+          // Gradient descent
+          for (let iter = 0; iter < iterations; iter++) {
+            let gradW = 0;
+            let gradB = 0;
+            
+            for (const p of normalizedPairs) {
+              const z = w * p.x + b;
+              const pred = 1 / (1 + Math.exp(-z)); // sigmoid
+              const error = pred - p.y;
+              gradW += error * p.x;
+              gradB += error;
+            }
+            
+            w -= (learningRate * gradW) / normalizedPairs.length;
+            b -= (learningRate * gradB) / normalizedPairs.length;
+          }
+          
+          // Calculate accuracy
+          let correct = 0;
+          normalizedPairs.forEach(p => {
+            const z = w * p.x + b;
+            const pred = 1 / (1 + Math.exp(-z));
+            const predClass = pred >= 0.5 ? 1 : 0;
+            if (predClass === p.y) correct++;
+          });
+          const accuracy = correct / normalizedPairs.length;
+          
+          logisticRegressionResults.push({
+            type: 'logistic',
+            featureColumn: featureCol,
+            targetColumn: targetCol,
+            weight: w,
+            bias: b,
+            accuracy,
+            classes: uniqueVals,
+            interpretation: `Predicting ${targetCol} based on ${featureCol} with ${(accuracy * 100).toFixed(1)}% accuracy`
+          });
+        }
+      }
+    }
 
-    // STEP 5: GENERATE VISUALIZATIONS
+    // STEP 5: GENERATE MULTIPLE VISUALIZATION OPTIONS
     console.log('Step 5: Generating visualizations...');
     
     const visualizations: any[] = [];
     
-    // Bar chart for first categorical vs numeric
+    // Categorical vs Numeric: multiple chart types
     if (categoricalColumns.length > 0 && numericColumns.length > 0) {
       const catCol = categoricalColumns.filter(c => c !== 'cluster')[0];
       const numCol = numericColumns[0];
@@ -317,11 +399,14 @@ serve(async (req) => {
       
       const chartData = Object.entries(grouped).map(([key, values]: [string, any]) => ({
         [catCol]: key,
-        [numCol]: values.reduce((sum: number, v: number) => sum + v, 0) / values.length
+        [numCol]: values.reduce((sum: number, v: number) => sum + v, 0) / values.length,
+        count: values.length
       })).slice(0, 10);
       
+      // Bar chart
       visualizations.push({
         type: 'bar',
+        availableTypes: ['bar', 'line', 'area', 'pie'],
         title: `Average ${numCol} by ${catCol}`,
         description: `Distribution of ${numCol} across different ${catCol} categories`,
         xAxis: catCol,
@@ -330,7 +415,7 @@ serve(async (req) => {
       });
     }
     
-    // Line chart for first numeric column over index
+    // Time series / trend data: multiple chart types
     if (numericColumns.length > 0) {
       const numCol = numericColumns[0];
       const chartData = validData.slice(0, 50).map((row, idx) => ({
@@ -340,6 +425,7 @@ serve(async (req) => {
       
       visualizations.push({
         type: 'line',
+        availableTypes: ['line', 'area', 'bar'],
         title: `${numCol} Trend`,
         description: `Trend of ${numCol} over observations`,
         xAxis: 'index',
@@ -348,7 +434,7 @@ serve(async (req) => {
       });
     }
     
-    // Scatter plot for regression with clusters
+    // Scatter plot with regression line
     if (regressionResults.length > 0) {
       const reg = regressionResults[0];
       const chartData = validData.slice(0, 100).map(row => ({
@@ -359,6 +445,7 @@ serve(async (req) => {
       
       visualizations.push({
         type: 'scatter',
+        availableTypes: ['scatter', 'line'],
         title: `${reg.xColumn} vs ${reg.yColumn}`,
         description: `Correlation: ${reg.correlation.toFixed(3)}, R²: ${reg.rSquared.toFixed(3)}`,
         xAxis: reg.xColumn,
@@ -366,8 +453,43 @@ serve(async (req) => {
         data: chartData
       });
     }
+    
+    // Distribution chart for numeric columns
+    if (numericColumns.length > 0) {
+      const numCol = numericColumns[0];
+      const values = validData.map(row => row[numCol]).filter(v => v !== null) as number[];
+      
+      // Create histogram bins
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const binCount = Math.min(10, Math.floor(values.length / 5));
+      const binSize = (max - min) / binCount;
+      const bins: any = {};
+      
+      for (let i = 0; i < binCount; i++) {
+        const binStart = min + i * binSize;
+        const binEnd = binStart + binSize;
+        const binLabel = `${binStart.toFixed(1)}-${binEnd.toFixed(1)}`;
+        bins[binLabel] = values.filter(v => v >= binStart && v < binEnd).length;
+      }
+      
+      const histogramData = Object.entries(bins).map(([range, count]) => ({
+        range,
+        frequency: count
+      }));
+      
+      visualizations.push({
+        type: 'bar',
+        availableTypes: ['bar', 'area'],
+        title: `${numCol} Distribution`,
+        description: `Frequency distribution of ${numCol}`,
+        xAxis: 'range',
+        yAxis: 'frequency',
+        data: histogramData
+      });
+    }
 
-    // Prepare comprehensive dataset summary for AI
+    // Prepare comprehensive dataset summary for AI with ML recommendations
     const summary = {
       dataQuality: dataQualityReport,
       totalRows: validData.length,
@@ -376,7 +498,8 @@ serve(async (req) => {
       categoricalColumns,
       descriptiveStats,
       clustering: clusteringResults,
-      regressionResults,
+      linearRegression: regressionResults,
+      logisticRegression: logisticRegressionResults,
       sampleData: validData.slice(0, 5)
     };
 
@@ -393,11 +516,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a data scientist expert. Analyze cleaned and preprocessed datasets with clustering and EDA results. Provide actionable insights in JSON format with these fields: type (trend/correlation/outlier/pattern/cluster), title, description, confidence_score (0-1). Focus on data quality issues, cluster characteristics, statistical anomalies, and meaningful patterns.'
+            content: 'You are a data scientist and machine learning expert. Analyze datasets with advanced statistical methods, clustering, and regression models. Provide actionable insights and recommend appropriate ML/DL models for the data. Consider: data patterns, model suitability (classification, regression, clustering), feature importance, and prediction accuracy. Format: type (trend/correlation/outlier/pattern/cluster/model_recommendation), title, description, confidence_score (0-1).'
           },
           {
             role: 'user',
-            content: `Analyze this preprocessed dataset and provide 5-7 key insights based on:\n\n1. Data Quality Report: ${JSON.stringify(summary.dataQuality, null, 2)}\n\n2. Statistical Summary: ${JSON.stringify(summary.descriptiveStats, null, 2)}\n\n3. Clustering Results: ${JSON.stringify(summary.clustering, null, 2)}\n\n4. Regression Analysis: ${JSON.stringify(summary.regressionResults, null, 2)}\n\n5. Sample Data: ${JSON.stringify(validData.slice(0, 10), null, 2)}`
+            content: `Analyze this comprehensive dataset and provide 5-8 key insights including ML/DL model recommendations:\n\n1. Data Quality: ${JSON.stringify(summary.dataQuality, null, 2)}\n\n2. Statistics: ${JSON.stringify(summary.descriptiveStats, null, 2)}\n\n3. Clustering: ${JSON.stringify(summary.clustering, null, 2)}\n\n4. Linear Regression: ${JSON.stringify(summary.linearRegression, null, 2)}\n\n5. Logistic Regression: ${JSON.stringify(summary.logisticRegression, null, 2)}\n\n6. Sample Data: ${JSON.stringify(validData.slice(0, 10), null, 2)}\n\nRecommend the best ML/DL models (e.g., Random Forest, Neural Networks, SVM, Decision Trees) for this dataset based on its characteristics.`
           }
         ],
         tools: [{
@@ -474,7 +597,8 @@ serve(async (req) => {
         dataQuality: dataQualityReport,
         statistics: {
           descriptive: descriptiveStats,
-          regression: regressionResults,
+          linearRegression: regressionResults,
+          logisticRegression: logisticRegressionResults,
           clustering: clusteringResults
         },
         visualizations,

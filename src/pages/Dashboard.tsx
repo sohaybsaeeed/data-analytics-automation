@@ -9,7 +9,9 @@ import * as XLSX from "xlsx";
 import { Upload, TrendingUp, LogOut, Sparkles, Database, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, AreaChart, Area, PieChart, Pie, Cell } from "recharts";
+import { DetailedStatisticsDialog } from "@/components/DetailedStatisticsDialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -22,7 +24,10 @@ const Dashboard = () => {
   const [visualizations, setVisualizations] = useState<any[]>([]);
   const [dataQuality, setDataQuality] = useState<any>(null);
   const [processingStatus, setProcessingStatus] = useState<string>('');
+  const [chartTypes, setChartTypes] = useState<{ [key: number]: string }>({});
   const navigate = useNavigate();
+  
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))', '#8884d8', '#82ca9d', '#ffc658', '#ff7c7c'];
 
   useEffect(() => {
     const checkUser = async () => {
@@ -161,6 +166,14 @@ const Dashboard = () => {
         setVisualizations(analysisResult.visualizations || []);
         setDataQuality(analysisResult.dataQuality || null);
         setProcessingStatus('');
+        
+        // Initialize chart types with default values
+        const initialChartTypes: { [key: number]: string } = {};
+        analysisResult.visualizations?.forEach((viz: any, index: number) => {
+          initialChartTypes[index] = viz.type;
+        });
+        setChartTypes(initialChartTypes);
+        
         toast.success(`Data cleaned, clustered, and analyzed successfully. ${analysisResult.dataQuality?.finalRows || 0} valid rows processed.`);
       } else {
         toast.error("No insights generated");
@@ -363,85 +376,186 @@ const Dashboard = () => {
 
             <TabsContent value="visualizations" className="space-y-6">
               <h2 className="text-2xl font-bold mb-4">Data Visualizations</h2>
-              {visualizations.map((viz, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5" />
-                      {viz.title}
-                    </CardTitle>
-                    <CardDescription>{viz.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {viz.type === 'bar' && (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={viz.data}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey={viz.xAxis} />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Bar dataKey={viz.yAxis} fill="hsl(var(--primary))" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    )}
-                    {viz.type === 'line' && (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={viz.data}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey={viz.xAxis} />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Line type="monotone" dataKey={viz.yAxis} stroke="hsl(var(--primary))" />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    )}
-                    {viz.type === 'scatter' && (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <ScatterChart>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey={viz.xAxis} name={viz.xAxis} />
-                          <YAxis dataKey={viz.yAxis} name={viz.yAxis} />
-                          <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                          <Scatter name={viz.title} data={viz.data} fill="hsl(var(--primary))" />
-                        </ScatterChart>
-                      </ResponsiveContainer>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+              <p className="text-sm text-muted-foreground mb-4">
+                Switch between different chart types to explore your data from multiple perspectives
+              </p>
+              {visualizations.map((viz, index) => {
+                const currentChartType = chartTypes[index] || viz.type;
+                return (
+                  <Card key={index}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            <BarChart3 className="w-5 h-5" />
+                            {viz.title}
+                          </CardTitle>
+                          <CardDescription>{viz.description}</CardDescription>
+                        </div>
+                        {viz.availableTypes && viz.availableTypes.length > 1 && (
+                          <Select 
+                            value={currentChartType} 
+                            onValueChange={(value) => setChartTypes(prev => ({ ...prev, [index]: value }))}
+                          >
+                            <SelectTrigger className="w-[140px]">
+                              <SelectValue placeholder="Chart Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {viz.availableTypes.map((type: string) => (
+                                <SelectItem key={type} value={type}>
+                                  {type.charAt(0).toUpperCase() + type.slice(1)} Chart
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {currentChartType === 'bar' && (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={viz.data}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey={viz.xAxis} />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey={viz.yAxis} fill="hsl(var(--primary))" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                      {currentChartType === 'line' && (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <LineChart data={viz.data}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey={viz.xAxis} />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Line type="monotone" dataKey={viz.yAxis} stroke="hsl(var(--primary))" strokeWidth={2} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
+                      {currentChartType === 'area' && (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <AreaChart data={viz.data}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey={viz.xAxis} />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Area type="monotone" dataKey={viz.yAxis} stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.6} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
+                      {currentChartType === 'pie' && (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={viz.data}
+                              dataKey={viz.yAxis}
+                              nameKey={viz.xAxis}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={100}
+                              label
+                            >
+                              {viz.data.map((_: any, i: number) => (
+                                <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      )}
+                      {currentChartType === 'scatter' && (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <ScatterChart>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey={viz.xAxis} name={viz.xAxis} />
+                            <YAxis dataKey={viz.yAxis} name={viz.yAxis} />
+                            <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                            <Scatter name={viz.title} data={viz.data} fill="hsl(var(--primary))" />
+                          </ScatterChart>
+                        </ResponsiveContainer>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </TabsContent>
 
             <TabsContent value="statistics" className="space-y-6">
               <h2 className="text-2xl font-bold mb-4">Statistical Analysis</h2>
               {statistics && (
                 <>
-                  {statistics.descriptive && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Key Statistics Overview</CardTitle>
+                      <CardDescription>Summary of important statistical measures</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {statistics.descriptive && Object.entries(statistics.descriptive).slice(0, 3).map(([column, stats]: [string, any]) => (
+                        <div key={column} className="border-l-4 border-l-primary pl-4 py-2">
+                          <h4 className="font-semibold mb-2">{column}</h4>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Mean:</span>
+                              <p className="text-lg font-medium">{stats.mean?.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Median:</span>
+                              <p className="text-lg font-medium">{stats.median?.toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Std Dev:</span>
+                              <p className="text-lg font-medium">{stats.stdDev?.toFixed(2)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <DetailedStatisticsDialog statistics={statistics} />
+                    </CardContent>
+                  </Card>
+                  
+                  {(statistics.linearRegression && statistics.linearRegression.length > 0) && (
                     <Card>
                       <CardHeader>
-                        <CardTitle>Descriptive Statistics</CardTitle>
-                        <CardDescription>Comprehensive statistical summary with outlier detection</CardDescription>
+                        <CardTitle>Linear Regression Models</CardTitle>
+                        <CardDescription>Predictive relationships between variables</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-4">
-                          {Object.entries(statistics.descriptive).map(([column, stats]: [string, any]) => (
-                            <div key={column} className="space-y-2 border rounded-lg p-4">
-                              <h4 className="font-semibold">{column}</h4>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                                <div><span className="text-muted-foreground">Mean:</span> {stats.mean?.toFixed(2)}</div>
-                                <div><span className="text-muted-foreground">Median:</span> {stats.median?.toFixed(2)}</div>
-                                <div><span className="text-muted-foreground">Std Dev:</span> {stats.stdDev?.toFixed(2)}</div>
-                                <div><span className="text-muted-foreground">Min:</span> {stats.min?.toFixed(2)}</div>
-                                <div><span className="text-muted-foreground">Max:</span> {stats.max?.toFixed(2)}</div>
-                                <div><span className="text-muted-foreground">Count:</span> {stats.count}</div>
-                                <div><span className="text-muted-foreground">Q1:</span> {stats.q1?.toFixed(2)}</div>
-                                <div><span className="text-muted-foreground">Q3:</span> {stats.q3?.toFixed(2)}</div>
-                                <div><span className="text-muted-foreground">IQR:</span> {stats.iqr?.toFixed(2)}</div>
-                                <div><span className="text-muted-foreground">Outliers:</span> <span className="text-orange-600 font-medium">{stats.outlierCount}</span></div>
-                                <div><span className="text-muted-foreground">Skewness:</span> {stats.skewness?.toFixed(3)}</div>
-                                <div><span className="text-muted-foreground">Kurtosis:</span> {stats.kurtosis?.toFixed(3)}</div>
+                        <div className="space-y-3">
+                          {statistics.linearRegression.map((reg: any, index: number) => (
+                            <div key={index} className="border rounded-lg p-3">
+                              <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-semibold">{reg.xColumn} → {reg.yColumn}</h4>
+                                <span className="text-sm text-muted-foreground">R² = {reg.rSquared?.toFixed(3)}</span>
                               </div>
+                              <p className="text-xs font-mono bg-muted p-2 rounded">{reg.equation}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {statistics.logisticRegression && statistics.logisticRegression.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Logistic Regression Models</CardTitle>
+                        <CardDescription>Binary classification predictions</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {statistics.logisticRegression.map((reg: any, index: number) => (
+                            <div key={index} className="border rounded-lg p-3">
+                              <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-semibold">{reg.featureColumn} → {reg.targetColumn}</h4>
+                                <span className="text-sm font-medium text-green-600">{(reg.accuracy * 100).toFixed(1)}% Accuracy</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{reg.interpretation}</p>
                             </div>
                           ))}
                         </div>
@@ -453,54 +567,14 @@ const Dashboard = () => {
                     <Card>
                       <CardHeader>
                         <CardTitle>Clustering Analysis</CardTitle>
-                        <CardDescription>K-means clustering results</CardDescription>
+                        <CardDescription>{statistics.clustering.method} with {statistics.clustering.k} clusters</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Method:</span>
-                            <span className="font-medium">{statistics.clustering.method}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Number of Clusters:</span>
-                            <span className="font-medium">{statistics.clustering.k}</span>
-                          </div>
-                          <div className="mt-4">
-                            <h4 className="font-semibold mb-2">Cluster Distribution</h4>
-                            <div className="space-y-2">
-                              {Object.entries(statistics.clustering.clusters || {}).map(([cluster, count]: [string, any]) => (
-                                <div key={cluster} className="flex justify-between items-center p-2 bg-muted rounded">
-                                  <span>Cluster {parseInt(cluster) + 1}</span>
-                                  <span className="font-medium">{count} points</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {statistics.regression && statistics.regression.length > 0 && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Regression Analysis</CardTitle>
-                        <CardDescription>Linear regression between numeric variables</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {statistics.regression.map((reg: any, index: number) => (
-                            <div key={index} className="border rounded-lg p-4">
-                              <h4 className="font-semibold mb-2">{reg.xColumn} vs {reg.yColumn}</h4>
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <p><span className="font-semibold">Slope:</span> {reg.slope?.toFixed(4)}</p>
-                                <p><span className="font-semibold">Intercept:</span> {reg.intercept?.toFixed(4)}</p>
-                                <p><span className="font-semibold">R²:</span> {reg.rSquared?.toFixed(4)}</p>
-                                <p><span className="font-semibold">Correlation:</span> {reg.correlation?.toFixed(4)}</p>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-2">
-                                Equation: y = {reg.slope?.toFixed(4)}x + {reg.intercept?.toFixed(4)}
-                              </p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {Object.entries(statistics.clustering.clusters || {}).map(([cluster, count]: [string, any]) => (
+                            <div key={cluster} className="p-3 bg-muted rounded text-center">
+                              <p className="text-sm text-muted-foreground">Cluster {parseInt(cluster) + 1}</p>
+                              <p className="text-xl font-bold">{count}</p>
                             </div>
                           ))}
                         </div>
