@@ -18,6 +18,9 @@ import ManualOrganizationMethod from "@/components/ManualOrganizationMethod";
 import SQLDataOrganizer from "@/components/SQLDataOrganizer";
 import PythonDataOrganizer from "@/components/PythonDataOrganizer";
 import ExcelDataOrganizer from "@/components/ExcelDataOrganizer";
+import { AdvancedVisualizationPanel } from "@/components/AdvancedVisualizationPanel";
+import { DataEditorPanel } from "@/components/DataEditorPanel";
+import { CustomCalculationsPanel } from "@/components/CustomCalculationsPanel";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -339,10 +342,13 @@ const Dashboard = () => {
 
         {insights.length > 0 && (
           <Tabs defaultValue="quality" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-7 lg:grid-cols-7">
               <TabsTrigger value="quality">Data Quality</TabsTrigger>
               <TabsTrigger value="insights">AI Insights</TabsTrigger>
               <TabsTrigger value="visualizations">Visualizations</TabsTrigger>
+              <TabsTrigger value="advanced">Advanced Viz</TabsTrigger>
+              <TabsTrigger value="editor">Data Editor</TabsTrigger>
+              <TabsTrigger value="calculations">Calculations</TabsTrigger>
               <TabsTrigger value="statistics">Statistics</TabsTrigger>
             </TabsList>
             
@@ -624,6 +630,51 @@ const Dashboard = () => {
                     </Card>
                   )}
                 </>
+              )}
+            </TabsContent>
+
+            <TabsContent value="advanced" className="space-y-4">
+              <h2 className="text-2xl font-bold">Advanced Visualizations</h2>
+              <p className="text-muted-foreground mb-4">
+                Power BI & Tableau-like visualization controls with filtering, drill-down, and custom styling
+              </p>
+              {dataset && (
+                <AdvancedVisualizationPanel 
+                  data={dataset} 
+                  insights={insights}
+                  onDataEdit={(newData) => setDataset(newData)}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="editor" className="space-y-4">
+              <h2 className="text-2xl font-bold">Data Editor</h2>
+              <p className="text-muted-foreground mb-4">
+                Edit data directly in the dashboard with bulk operations and sorting
+              </p>
+              {dataset && (
+                <DataEditorPanel 
+                  data={dataset}
+                  onDataUpdate={(newData) => {
+                    setDataset(newData);
+                    toast.success("Data updated in dashboard");
+                  }}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="calculations" className="space-y-4">
+              <h2 className="text-2xl font-bold">Custom Calculations</h2>
+              <p className="text-muted-foreground mb-4">
+                Create custom measures, aggregations, and calculated fields
+              </p>
+              {dataset && (
+                <CustomCalculationsPanel 
+                  data={dataset}
+                  onCalculationApplied={(data, calcName) => {
+                    console.log(`Applied calculation: ${calcName}`);
+                  }}
+                />
               )}
             </TabsContent>
           </Tabs>
