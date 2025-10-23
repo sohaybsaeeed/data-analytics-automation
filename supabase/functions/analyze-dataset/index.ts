@@ -403,7 +403,6 @@ serve(async (req) => {
         count: values.length
       })).slice(0, 10);
       
-      // Bar chart
       visualizations.push({
         type: 'bar',
         availableTypes: ['bar', 'line', 'area', 'pie'],
@@ -437,7 +436,7 @@ serve(async (req) => {
     // Scatter plot with regression line
     if (regressionResults.length > 0) {
       const reg = regressionResults[0];
-      const chartData = validData.slice(0, 100).map(row => ({
+      const scatterData = validData.slice(0, 100).map(row => ({
         [reg.xColumn]: row[reg.xColumn],
         [reg.yColumn]: row[reg.yColumn],
         cluster: row['cluster']
@@ -450,11 +449,11 @@ serve(async (req) => {
         description: `Correlation: ${reg.correlation.toFixed(3)}, R²: ${reg.rSquared.toFixed(3)}`,
         xAxis: reg.xColumn,
         yAxis: reg.yColumn,
-        data: chartData
+        data: scatterData
       });
     }
     
-    // Distribution chart for numeric columns
+    // Distribution histogram for numeric columns
     if (numericColumns.length > 0) {
       const numCol = numericColumns[0];
       const values = validData.map(row => row[numCol]).filter(v => v !== null) as number[];
@@ -481,12 +480,80 @@ serve(async (req) => {
       visualizations.push({
         type: 'bar',
         availableTypes: ['bar', 'area'],
-        title: `${numCol} Distribution`,
+        title: `${numCol} Distribution (Histogram)`,
         description: `Frequency distribution of ${numCol}`,
         xAxis: 'range',
         yAxis: 'frequency',
         data: histogramData
       });
+    }
+    
+    // Correlation heatmap data
+    if (numericColumns.length >= 2) {
+      const correlationMatrix: any[] = [];
+      for (let i = 0; i < Math.min(numericColumns.length, 5); i++) {
+        for (let j = 0; j < Math.min(numericColumns.length, 5); j++) {
+          const col1 = numericColumns[i];
+          const col2 = numericColumns[j];
+          
+          const pairs = validData.map(row => ({
+            x: row[col1] as number,
+            y: row[col2] as number
+          })).filter(p => p.x !== null && p.y !== null && !isNaN(p.x) && !isNaN(p.y));
+          
+          if (pairs.length > 0) {
+            const n = pairs.length;
+            const sumX = pairs.reduce((sum, p) => sum + p.x, 0);
+            const sumY = pairs.reduce((sum, p) => sum + p.y, 0);
+            const sumXY = pairs.reduce((sum, p) => sum + p.x * p.y, 0);
+            const sumX2 = pairs.reduce((sum, p) => sum + p.x * p.x, 0);
+            const sumY2 = pairs.reduce((sum, p) => sum + p.y * p.y, 0);
+            
+            const correlation = (n * sumXY - sumX * sumY) / 
+              Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+            
+            correlationMatrix.push({
+              x: col1,
+              y: col2,
+              value: isNaN(correlation) ? 0 : correlation
+            });
+          }
+        }
+      }
+      
+      if (correlationMatrix.length > 0) {
+        visualizations.push({
+          type: 'heatmap',
+          availableTypes: ['heatmap'],
+          title: 'Correlation Heatmap',
+          description: 'Correlation between numeric variables',
+          data: correlationMatrix
+        });
+      }
+    }
+    
+    // Clustering scatter plot
+    if (clusteringResults.k && numericColumns.length >= 2) {
+      const col1 = numericColumns[0];
+      const col2 = numericColumns[1];
+      const clusterData = validData.slice(0, 200).map(row => ({
+        [col1]: row[col1],
+        [col2]: row[col2],
+        cluster: row['cluster'] !== undefined ? `Cluster ${row['cluster']}` : 'No Cluster'
+      })).filter(p => p[col1] !== null && p[col2] !== null);
+      
+      if (clusterData.length > 0) {
+        visualizations.push({
+          type: 'scatter',
+          availableTypes: ['scatter'],
+          title: `Clustering Analysis: ${col1} vs ${col2}`,
+          description: `${clusteringResults.k} clusters identified using K-Means algorithm`,
+          xAxis: col1,
+          yAxis: col2,
+          data: clusterData,
+          clusterKey: 'cluster'
+        });
+      }
     }
 
     // Prepare comprehensive dataset summary for AI with ML recommendations

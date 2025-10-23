@@ -14,6 +14,10 @@ import { DetailedStatisticsDialog } from "@/components/DetailedStatisticsDialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DataOrganizationDialog from "@/components/DataOrganizationDialog";
 import ManualDataOrganizer from "@/components/ManualDataOrganizer";
+import ManualOrganizationMethod from "@/components/ManualOrganizationMethod";
+import SQLDataOrganizer from "@/components/SQLDataOrganizer";
+import PythonDataOrganizer from "@/components/PythonDataOrganizer";
+import ExcelDataOrganizer from "@/components/ExcelDataOrganizer";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -29,6 +33,8 @@ const Dashboard = () => {
   const [chartTypes, setChartTypes] = useState<{ [key: number]: string }>({});
   const [showOrganizationDialog, setShowOrganizationDialog] = useState(false);
   const [showManualOrganizer, setShowManualOrganizer] = useState(false);
+  const [showMethodDialog, setShowMethodDialog] = useState(false);
+  const [organizationMethod, setOrganizationMethod] = useState<'sql' | 'python' | 'excel' | 'manual' | null>(null);
   const [pendingData, setPendingData] = useState<{ file: File; data: any[]; fields: string[]; sourceType: string } | null>(null);
   const navigate = useNavigate();
   
@@ -162,14 +168,20 @@ const Dashboard = () => {
         setPendingData(null);
       }
     } else {
-      setShowManualOrganizer(true);
+      setShowMethodDialog(true);
     }
   };
 
-  const handleManualOrganizationConfirm = (organizedData: any[], selectedColumns: string[]) => {
+  const handleMethodChoice = (method: 'sql' | 'python' | 'excel') => {
+    setShowMethodDialog(false);
+    setOrganizationMethod(method);
+  };
+
+  const handleManualOrganizationConfirm = (organizedData: any[], selectedColumns?: string[]) => {
     setShowManualOrganizer(false);
+    setOrganizationMethod(null);
     setDataset(organizedData);
-    toast.success(`Data organized: ${selectedColumns.length} columns selected`);
+    toast.success(`Data organized: ${selectedColumns ? selectedColumns.length + ' columns selected' : organizedData.length + ' rows'}`);
     handleAnalyzeData(organizedData);
     setPendingData(null);
   };
@@ -545,7 +557,7 @@ const Dashboard = () => {
                           </div>
                         </div>
                       ))}
-                      <DetailedStatisticsDialog statistics={statistics} />
+                      <DetailedStatisticsDialog statistics={statistics} data={dataset || []} />
                     </CardContent>
                   </Card>
                   
@@ -623,12 +635,22 @@ const Dashboard = () => {
         onChoice={handleOrganizationChoice} 
       />
       
-      {showManualOrganizer && pendingData && (
+      <ManualOrganizationMethod
+        open={showMethodDialog}
+        onChoice={handleMethodChoice}
+      />
+      
+      {organizationMethod && pendingData && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <ManualDataOrganizer
-            data={pendingData.data}
-            onConfirm={handleManualOrganizationConfirm}
-          />
+          {organizationMethod === 'sql' && (
+            <SQLDataOrganizer data={pendingData.data} onConfirm={handleManualOrganizationConfirm} />
+          )}
+          {organizationMethod === 'python' && (
+            <PythonDataOrganizer data={pendingData.data} fileName={pendingData.file.name} onConfirm={handleManualOrganizationConfirm} />
+          )}
+          {organizationMethod === 'excel' && (
+            <ExcelDataOrganizer data={pendingData.data} fileName={pendingData.file.name} onConfirm={handleManualOrganizationConfirm} />
+          )}
         </div>
       )}
     </div>
