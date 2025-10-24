@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Edit3, Save, X, Plus, Trash2, RefreshCw } from "lucide-react";
+import { Edit3, Save, X, Plus, Trash2, Copy, Clipboard, Undo, Redo } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -19,13 +18,144 @@ export const DataEditorPanel = ({ data, onDataUpdate }: DataEditorPanelProps) =>
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [activeCell, setActiveCell] = useState<{ row: number; col: string } | null>(null);
+  const [copiedData, setCopiedData] = useState<any>(null);
+  const [history, setHistory] = useState<any[][]>([data]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const inputRefs = useRef<{ [key: string]: HTMLInputElement }>({});
 
   const columns = data.length > 0 ? Object.keys(data[0]) : [];
+
+  // Update edited data when data prop changes
+  useEffect(() => {
+    setEditedData(data);
+    setHistory([data]);
+    setHistoryIndex(0);
+  }, [data]);
+
+  const saveToHistory = (newData: any[]) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newData);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1);
+      setEditedData(history[historyIndex - 1]);
+      toast.success("Undo successful");
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(historyIndex + 1);
+      setEditedData(history[historyIndex + 1]);
+      toast.success("Redo successful");
+    }
+  };
 
   const handleCellEdit = (rowIndex: number, column: string, value: string) => {
     const newData = [...editedData];
     newData[rowIndex] = { ...newData[rowIndex], [column]: value };
     setEditedData(newData);
+    saveToHistory(newData);
+  };
+
+  const handleCopy = () => {
+    if (activeCell) {
+      const cellValue = editedData[activeCell.row][activeCell.col];
+      setCopiedData({ value: cellValue, single: true });
+      navigator.clipboard.writeText(String(cellValue));
+      toast.success("Cell copied");
+    } else if (selectedRows.length > 0) {
+      const selectedData = selectedRows.map(idx => editedData[idx]);
+      setCopiedData({ value: selectedData, single: false });
+      toast.success(`${selectedRows.length} row(s) copied`);
+    }
+  };
+
+  const handlePaste = () => {
+    if (!copiedData) {
+      toast.error("Nothing to paste");
+      return;
+    }
+
+    if (copiedData.single && activeCell) {
+      handleCellEdit(activeCell.row, activeCell.col, copiedData.value);
+      toast.success("Cell pasted");
+    } else if (!copiedData.single && copiedData.value) {
+      const newData = [...editedData, ...copiedData.value];
+      setEditedData(newData);
+      saveToHistory(newData);
+      toast.success("Rows pasted");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, rowIndex: number, colIndex: number) => {
+    const col = columns[colIndex];
+    
+    // Arrow key navigation
+    if (e.key === 'ArrowDown' && rowIndex < editedData.length - 1) {
+      e.preventDefault();
+      setActiveCell({ row: rowIndex + 1, col });
+      const key = `${rowIndex + 1}-${col}`;
+      inputRefs.current[key]?.focus();
+    } else if (e.key === 'ArrowUp' && rowIndex > 0) {
+      e.preventDefault();
+      setActiveCell({ row: rowIndex - 1, col });
+      const key = `${rowIndex - 1}-${col}`;
+      inputRefs.current[key]?.focus();
+    } else if (e.key === 'ArrowRight' && colIndex < columns.length - 1) {
+      e.preventDefault();
+      const nextCol = columns[colIndex + 1];
+      setActiveCell({ row: rowIndex, col: nextCol });
+      const key = `${rowIndex}-${nextCol}`;
+      inputRefs.current[key]?.focus();
+    } else if (e.key === 'ArrowLeft' && colIndex > 0) {
+      e.preventDefault();
+      const prevCol = columns[colIndex - 1];
+      setActiveCell({ row: rowIndex, col: prevCol });
+      const key = `${rowIndex}-${prevCol}`;
+      inputRefs.current[key]?.focus();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (rowIndex < editedData.length - 1) {
+        setActiveCell({ row: rowIndex + 1, col });
+        const key = `${rowIndex + 1}-${col}`;
+        inputRefs.current[key]?.focus();
+      }
+    } else if (e.key === 'Tab' && !e.shiftKey && colIndex < columns.length - 1) {
+      e.preventDefault();
+      const nextCol = columns[colIndex + 1];
+      setActiveCell({ row: rowIndex, col: nextCol });
+      const key = `${rowIndex}-${nextCol}`;
+      inputRefs.current[key]?.focus();
+    } else if (e.key === 'Tab' && e.shiftKey && colIndex > 0) {
+      e.preventDefault();
+      const prevCol = columns[colIndex - 1];
+      setActiveCell({ row: rowIndex, col: prevCol });
+      const key = `${rowIndex}-${prevCol}`;
+      inputRefs.current[key]?.focus();
+    }
+    
+    // Copy/Paste with Ctrl+C / Ctrl+V
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'c') {
+        e.preventDefault();
+        handleCopy();
+      } else if (e.key === 'v') {
+        e.preventDefault();
+        handlePaste();
+      } else if (e.key === 'z') {
+        e.preventDefault();
+        handleUndo();
+      } else if (e.key === 'y') {
+        e.preventDefault();
+        handleRedo();
+      }
+    }
   };
 
   const handleSave = () => {
@@ -43,13 +173,16 @@ export const DataEditorPanel = ({ data, onDataUpdate }: DataEditorPanelProps) =>
   const handleAddRow = () => {
     const newRow: any = {};
     columns.forEach(col => newRow[col] = "");
-    setEditedData([...editedData, newRow]);
+    const newData = [...editedData, newRow];
+    setEditedData(newData);
+    saveToHistory(newData);
     toast.success("New row added");
   };
 
   const handleDeleteRows = () => {
     const newData = editedData.filter((_, idx) => !selectedRows.includes(idx));
     setEditedData(newData);
+    saveToHistory(newData);
     setSelectedRows([]);
     toast.success(`Deleted ${selectedRows.length} row(s)`);
   };
@@ -84,7 +217,9 @@ export const DataEditorPanel = ({ data, onDataUpdate }: DataEditorPanelProps) =>
     switch (operation) {
       case 'duplicate':
         const duplicates = selectedRows.map(idx => ({ ...editedData[idx] }));
-        setEditedData([...editedData, ...duplicates]);
+        const newData = [...editedData, ...duplicates];
+        setEditedData(newData);
+        saveToHistory(newData);
         toast.success(`Duplicated ${selectedRows.length} row(s)`);
         break;
       case 'clear':
@@ -97,6 +232,7 @@ export const DataEditorPanel = ({ data, onDataUpdate }: DataEditorPanelProps) =>
           return row;
         });
         setEditedData(cleared);
+        saveToHistory(cleared);
         toast.success("Selected rows cleared");
         break;
       default:
@@ -158,6 +294,22 @@ export const DataEditorPanel = ({ data, onDataUpdate }: DataEditorPanelProps) =>
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Selected ({selectedRows.length})
               </Button>
+              <Button size="sm" variant="outline" onClick={handleCopy}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy (Ctrl+C)
+              </Button>
+              <Button size="sm" variant="outline" onClick={handlePaste} disabled={!copiedData}>
+                <Clipboard className="w-4 h-4 mr-2" />
+                Paste (Ctrl+V)
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleUndo} disabled={historyIndex === 0}>
+                <Undo className="w-4 h-4 mr-2" />
+                Undo (Ctrl+Z)
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleRedo} disabled={historyIndex === history.length - 1}>
+                <Redo className="w-4 h-4 mr-2" />
+                Redo (Ctrl+Y)
+              </Button>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline" disabled={selectedRows.length === 0}>
@@ -187,6 +339,9 @@ export const DataEditorPanel = ({ data, onDataUpdate }: DataEditorPanelProps) =>
                 </DialogContent>
               </Dialog>
             </div>
+            <p className="text-xs text-muted-foreground">
+              💡 Use arrow keys, Tab, Enter for navigation • Ctrl+C/V for copy/paste • Ctrl+Z/Y for undo/redo
+            </p>
           </div>
         )}
 
@@ -242,16 +397,24 @@ export const DataEditorPanel = ({ data, onDataUpdate }: DataEditorPanelProps) =>
                       />
                     </td>
                   )}
-                  {columns.map(col => (
-                    <td key={col} className="p-2">
+                  {columns.map((col, colIdx) => (
+                    <td 
+                      key={col} 
+                      className={`p-1 ${activeCell?.row === rowIdx && activeCell?.col === col ? 'ring-2 ring-primary' : ''}`}
+                    >
                       {editMode ? (
                         <Input
+                          ref={(el) => {
+                            if (el) inputRefs.current[`${rowIdx}-${col}`] = el;
+                          }}
                           value={String(row[col] || "")}
                           onChange={(e) => handleCellEdit(rowIdx, col, e.target.value)}
-                          className="min-w-[100px]"
+                          onFocus={() => setActiveCell({ row: rowIdx, col })}
+                          onKeyDown={(e) => handleKeyDown(e, rowIdx, colIdx)}
+                          className="min-w-[100px] h-8"
                         />
                       ) : (
-                        <span>{String(row[col])}</span>
+                        <span className="px-3 py-2 block">{String(row[col])}</span>
                       )}
                     </td>
                   ))}
