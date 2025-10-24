@@ -657,7 +657,11 @@ const Dashboard = () => {
                   data={dataset}
                   onDataUpdate={(newData) => {
                     setDataset(newData);
-                    toast.success("Data updated in dashboard");
+                    // Auto-analyze the updated data
+                    toast.success("Data updated! Regenerating analytics...");
+                    setTimeout(() => {
+                      handleAnalyzeData(newData);
+                    }, 500);
                   }}
                 />
               )}
