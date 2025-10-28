@@ -24,6 +24,9 @@ import { CustomCalculationsPanel } from "@/components/CustomCalculationsPanel";
 import { DAXAnalysisPanel } from "@/components/DAXAnalysisPanel";
 import { PivotTablePanel } from "@/components/PivotTablePanel";
 import { StatisticalTestsPanel } from "@/components/StatisticalTestsPanel";
+import { DashboardRecommendations } from "@/components/DashboardRecommendations";
+import { downloadCSV, downloadJSON, downloadInsightsReport } from "@/lib/downloadHelpers";
+import { Download } from "lucide-react";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -359,7 +362,27 @@ const Dashboard = () => {
             </TabsList>
             
             <TabsContent value="quality" className="space-y-4">
-              <h2 className="text-2xl font-bold">Data Quality Report</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">Data Quality Report</h2>
+                <Button
+                  onClick={() => {
+                    if (dataQuality) {
+                      const qualityData = [
+                        { Metric: 'Original Rows', Value: dataQuality.originalRows },
+                        { Metric: 'Duplicates Removed', Value: dataQuality.duplicatesRemoved },
+                        { Metric: 'Invalid Rows Removed', Value: dataQuality.invalidRowsRemoved },
+                        { Metric: 'Final Valid Rows', Value: dataQuality.finalRows }
+                      ];
+                      downloadCSV(qualityData, 'data-quality-report.csv');
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              </div>
               {dataQuality && (
                 <Card>
                   <CardHeader>
@@ -407,32 +430,74 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="insights" className="space-y-4">
-              <h2 className="text-2xl font-bold">AI-Generated Insights</h2>
-              {insights.map((insight, index) => (
-                <Card key={index} className="border-l-4 border-l-primary">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <span className="text-xs uppercase bg-primary/10 text-primary px-2 py-1 rounded">
-                        {insight.type}
-                      </span>
-                      {insight.title}
-                    </CardTitle>
-                    <CardDescription>
-                      Confidence: {(insight.confidence_score * 100).toFixed(0)}%
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm">{insight.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">AI-Generated Insights</h2>
+                <Button
+                  onClick={() => downloadInsightsReport(insights, statistics, dataQuality, visualizations)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download All Insights
+                </Button>
+              </div>
+              
+              <DashboardRecommendations 
+                data={dataset || []} 
+                insights={insights} 
+                statistics={statistics} 
+              />
+              
+              <div className="pt-6">
+                <h3 className="text-xl font-semibold mb-4">Detailed Insights</h3>
+                <div className="space-y-4">
+                  {insights.map((insight, index) => (
+                    <Card key={index} className="border-l-4 border-l-primary">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <span className="text-xs uppercase bg-primary/10 text-primary px-2 py-1 rounded">
+                            {insight.type}
+                          </span>
+                          {insight.title}
+                        </CardTitle>
+                        <CardDescription>
+                          Confidence: {(insight.confidence_score * 100).toFixed(0)}%
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm">{insight.description}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="visualizations" className="space-y-6">
-              <h2 className="text-2xl font-bold mb-4">Data Visualizations</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Switch between different chart types to explore your data from multiple perspectives
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Data Visualizations</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Switch between different chart types to explore your data from multiple perspectives
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    const vizData = visualizations.map(viz => ({
+                      Title: viz.title,
+                      Type: viz.type,
+                      Description: viz.description,
+                      DataPoints: viz.data?.length || 0
+                    }));
+                    downloadCSV(vizData, 'visualizations-summary.csv');
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              </div>
               {visualizations.map((viz, index) => {
                 const currentChartType = chartTypes[index] || viz.type;
                 return (
@@ -541,7 +606,21 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="statistics" className="space-y-6">
-              <h2 className="text-2xl font-bold mb-4">Statistical Analysis</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">Statistical Analysis</h2>
+                <Button
+                  onClick={() => {
+                    if (statistics) {
+                      downloadJSON(statistics, 'statistical-analysis.json');
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              </div>
               {statistics && (
                 <>
                   <Card>
@@ -640,10 +719,26 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="advanced" className="space-y-4">
-              <h2 className="text-2xl font-bold">Advanced Visualizations</h2>
-              <p className="text-muted-foreground mb-4">
-                Power BI & Tableau-like visualization controls with filtering, drill-down, and custom styling
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Advanced Visualizations</h2>
+                  <p className="text-muted-foreground mt-1">
+                    Power BI & Tableau-like visualization controls with filtering, drill-down, and custom styling
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (dataset) {
+                      downloadCSV(dataset, 'dataset-for-advanced-viz.csv');
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Data
+                </Button>
+              </div>
               {dataset && (
                 <AdvancedVisualizationPanel 
                   data={dataset} 
@@ -654,10 +749,26 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="editor" className="space-y-4">
-              <h2 className="text-2xl font-bold">Data Editor</h2>
-              <p className="text-muted-foreground mb-4">
-                Edit data directly in the dashboard with bulk operations and sorting
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Data Editor</h2>
+                  <p className="text-muted-foreground mt-1">
+                    Edit data directly in the dashboard with bulk operations and sorting
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (dataset) {
+                      downloadCSV(dataset, 'edited-data.csv');
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Data
+                </Button>
+              </div>
               {dataset && (
                 <DataEditorPanel 
                   data={dataset}
@@ -674,10 +785,26 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="calculations" className="space-y-4">
-              <h2 className="text-2xl font-bold">Custom Calculations</h2>
-              <p className="text-muted-foreground mb-4">
-                Create custom measures, aggregations, and calculated fields
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Custom Calculations</h2>
+                  <p className="text-muted-foreground mt-1">
+                    Create custom measures, aggregations, and calculated fields
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (dataset) {
+                      downloadCSV(dataset, 'calculations-data.csv');
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Data
+                </Button>
+              </div>
               {dataset && (
                 <CustomCalculationsPanel 
                   data={dataset}
@@ -689,10 +816,26 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="dax" className="space-y-4">
-              <h2 className="text-2xl font-bold">DAX Analysis & Measures</h2>
-              <p className="text-muted-foreground mb-4">
-                Create Power BI-style DAX measures with time intelligence, aggregations, and advanced formulas
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold">DAX Analysis & Measures</h2>
+                  <p className="text-muted-foreground mt-1">
+                    Create Power BI-style DAX measures with time intelligence, aggregations, and advanced formulas
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (dataset) {
+                      downloadCSV(dataset, 'dax-analysis-data.csv');
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Data
+                </Button>
+              </div>
               {dataset && (
                 <DAXAnalysisPanel 
                   data={dataset}
@@ -704,20 +847,52 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="pivot" className="space-y-4">
-              <h2 className="text-2xl font-bold">Pivot Table Analysis</h2>
-              <p className="text-muted-foreground mb-4">
-                Create Excel-style pivot tables with dynamic rows, columns, and aggregations
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Pivot Table Analysis</h2>
+                  <p className="text-muted-foreground mt-1">
+                    Create Excel-style pivot tables with dynamic rows, columns, and aggregations
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (dataset) {
+                      downloadCSV(dataset, 'pivot-table-data.csv');
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Data
+                </Button>
+              </div>
               {dataset && (
                 <PivotTablePanel data={dataset} />
               )}
             </TabsContent>
 
             <TabsContent value="stats-tests" className="space-y-4">
-              <h2 className="text-2xl font-bold">Statistical Hypothesis Testing</h2>
-              <p className="text-muted-foreground mb-4">
-                Run T-Tests, ANOVA, Correlation, and Chi-Square tests to validate hypotheses
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Statistical Hypothesis Testing</h2>
+                  <p className="text-muted-foreground mt-1">
+                    Run T-Tests, ANOVA, Correlation, and Chi-Square tests to validate hypotheses
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (dataset) {
+                      downloadCSV(dataset, 'stats-test-data.csv');
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Data
+                </Button>
+              </div>
               {dataset && (
                 <StatisticalTestsPanel data={dataset} />
               )}
