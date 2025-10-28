@@ -13,7 +13,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ScatterChart, Scatter, AreaChart, Area, PieChart, Pie,
   Cell, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  Treemap, FunnelChart, Funnel, ComposedChart, LabelList
+  Treemap, FunnelChart, Funnel, ComposedChart, LabelList, Rectangle
 } from "recharts";
 import {
   Download, Filter, Settings2, TrendingUp, Layers, Maximize2, Grid3x3,
@@ -38,6 +38,12 @@ export const AdvancedVisualizationPanel = ({ data, insights, onDataEdit }: Advan
   const [colorScheme, setColorScheme] = useState("default");
   const [savedViews, setSavedViews] = useState<any[]>([]);
   const [customCalculations, setCustomCalculations] = useState<any[]>([]);
+  const [chartAnimation, setChartAnimation] = useState(true);
+  const [showDataLabels, setShowDataLabels] = useState(false);
+  const [chartTitle, setChartTitle] = useState("");
+  const [chartSubtitle, setChartSubtitle] = useState("");
+  const [drillDownPath, setDrillDownPath] = useState<string[]>([]);
+  const [crossFilterEnabled, setCrossFilterEnabled] = useState(false);
 
   const COLORS = {
     default: ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#a4de6c'],
@@ -323,17 +329,38 @@ export const AdvancedVisualizationPanel = ({ data, insights, onDataEdit }: Advan
             </TabsList>
 
             <TabsContent value="chart" className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {['bar', 'line', 'area', 'scatter', 'pie', 'radar', 'funnel', 'composed'].map(type => (
-                  <Button
-                    key={type}
-                    variant={chartType === type ? "default" : "outline"}
-                    onClick={() => setChartType(type)}
-                    className="capitalize"
-                  >
-                    {type}
-                  </Button>
-                ))}
+              <div className="space-y-3">
+                <div>
+                  <Label>Standard Charts</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                    {['bar', 'line', 'area', 'scatter', 'pie', 'radar', 'funnel', 'composed'].map(type => (
+                      <Button
+                        key={type}
+                        variant={chartType === type ? "default" : "outline"}
+                        onClick={() => setChartType(type)}
+                        className="capitalize"
+                      >
+                        {type}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <Label>Advanced Visualizations</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                    {['treemap', 'heatmap', 'waterfall', 'boxplot', 'candlestick', 'gauge', 'sunburst', 'sankey'].map(type => (
+                      <Button
+                        key={type}
+                        variant={chartType === type ? "default" : "outline"}
+                        onClick={() => setChartType(type)}
+                        className="capitalize"
+                      >
+                        {type}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -446,6 +473,24 @@ export const AdvancedVisualizationPanel = ({ data, insights, onDataEdit }: Advan
             </TabsContent>
 
             <TabsContent value="style" className="space-y-4">
+              <div className="space-y-2">
+                <Label>Chart Title</Label>
+                <Input
+                  placeholder="Enter chart title"
+                  value={chartTitle}
+                  onChange={(e) => setChartTitle(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Chart Subtitle</Label>
+                <Input
+                  placeholder="Enter subtitle"
+                  value={chartSubtitle}
+                  onChange={(e) => setChartSubtitle(e.target.value)}
+                />
+              </div>
+              
               <div className="space-y-2">
                 <Label>Color Scheme</Label>
                 <Select value={colorScheme} onValueChange={setColorScheme}>

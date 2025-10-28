@@ -21,6 +21,9 @@ import ExcelDataOrganizer from "@/components/ExcelDataOrganizer";
 import { AdvancedVisualizationPanel } from "@/components/AdvancedVisualizationPanel";
 import { DataEditorPanel } from "@/components/DataEditorPanel";
 import { CustomCalculationsPanel } from "@/components/CustomCalculationsPanel";
+import { DAXAnalysisPanel } from "@/components/DAXAnalysisPanel";
+import { PivotTablePanel } from "@/components/PivotTablePanel";
+import { StatisticalTestsPanel } from "@/components/StatisticalTestsPanel";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -342,13 +345,16 @@ const Dashboard = () => {
 
         {insights.length > 0 && (
           <Tabs defaultValue="quality" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7 lg:grid-cols-7">
-              <TabsTrigger value="quality">Data Quality</TabsTrigger>
-              <TabsTrigger value="insights">AI Insights</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
+              <TabsTrigger value="quality">Quality</TabsTrigger>
+              <TabsTrigger value="insights">Insights</TabsTrigger>
               <TabsTrigger value="visualizations">Visualizations</TabsTrigger>
               <TabsTrigger value="advanced">Advanced Viz</TabsTrigger>
-              <TabsTrigger value="editor">Data Editor</TabsTrigger>
+              <TabsTrigger value="editor">Editor</TabsTrigger>
               <TabsTrigger value="calculations">Calculations</TabsTrigger>
+              <TabsTrigger value="dax">DAX</TabsTrigger>
+              <TabsTrigger value="pivot">Pivot Table</TabsTrigger>
+              <TabsTrigger value="stats-tests">Stats Tests</TabsTrigger>
               <TabsTrigger value="statistics">Statistics</TabsTrigger>
             </TabsList>
             
@@ -679,6 +685,41 @@ const Dashboard = () => {
                     console.log(`Applied calculation: ${calcName}`);
                   }}
                 />
+              )}
+            </TabsContent>
+
+            <TabsContent value="dax" className="space-y-4">
+              <h2 className="text-2xl font-bold">DAX Analysis & Measures</h2>
+              <p className="text-muted-foreground mb-4">
+                Create Power BI-style DAX measures with time intelligence, aggregations, and advanced formulas
+              </p>
+              {dataset && (
+                <DAXAnalysisPanel 
+                  data={dataset}
+                  onMeasureCreated={(measure) => {
+                    console.log('Measure created:', measure);
+                  }}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="pivot" className="space-y-4">
+              <h2 className="text-2xl font-bold">Pivot Table Analysis</h2>
+              <p className="text-muted-foreground mb-4">
+                Create Excel-style pivot tables with dynamic rows, columns, and aggregations
+              </p>
+              {dataset && (
+                <PivotTablePanel data={dataset} />
+              )}
+            </TabsContent>
+
+            <TabsContent value="stats-tests" className="space-y-4">
+              <h2 className="text-2xl font-bold">Statistical Hypothesis Testing</h2>
+              <p className="text-muted-foreground mb-4">
+                Run T-Tests, ANOVA, Correlation, and Chi-Square tests to validate hypotheses
+              </p>
+              {dataset && (
+                <StatisticalTestsPanel data={dataset} />
               )}
             </TabsContent>
           </Tabs>
