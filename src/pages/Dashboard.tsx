@@ -25,6 +25,7 @@ import { DAXAnalysisPanel } from "@/components/DAXAnalysisPanel";
 import { PivotTablePanel } from "@/components/PivotTablePanel";
 import { StatisticalTestsPanel } from "@/components/StatisticalTestsPanel";
 import { DashboardRecommendations } from "@/components/DashboardRecommendations";
+import { ConnectDatabaseDialog } from "@/components/ConnectDatabaseDialog";
 import { downloadCSV, downloadJSON, downloadInsightsReport } from "@/lib/downloadHelpers";
 import { Download } from "lucide-react";
 
@@ -45,6 +46,7 @@ const Dashboard = () => {
   const [showMethodDialog, setShowMethodDialog] = useState(false);
   const [organizationMethod, setOrganizationMethod] = useState<'sql' | 'python' | 'excel' | 'manual' | null>(null);
   const [pendingData, setPendingData] = useState<{ file: File; data: any[]; fields: string[]; sourceType: string } | null>(null);
+  const [showDatabaseDialog, setShowDatabaseDialog] = useState(false);
   const navigate = useNavigate();
   
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))', '#8884d8', '#82ca9d', '#ffc658', '#ff7c7c'];
@@ -195,6 +197,13 @@ const Dashboard = () => {
     setPendingData(null);
   };
 
+  const handleDatabaseImport = (data: any[], fields: string[]) => {
+    console.log('Database import complete:', data.length, 'rows');
+    setDataset(data);
+    toast.success(`Successfully imported ${data.length} rows from database`);
+    handleAnalyzeData(data);
+  };
+
   const handleAnalyzeData = async (data: any[]) => {
     if (!data || data.length === 0) {
       toast.error("No data to analyze");
@@ -298,9 +307,13 @@ const Dashboard = () => {
                 />
               </label>
               
-              <Button variant="outline" className="w-full" disabled>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowDatabaseDialog(true)}
+              >
                 <Database className="w-4 h-4 mr-2" />
-                Connect Database (Coming Soon)
+                Connect Database
               </Button>
             </CardContent>
           </Card>
@@ -909,6 +922,12 @@ const Dashboard = () => {
       <ManualOrganizationMethod
         open={showMethodDialog}
         onChoice={handleMethodChoice}
+      />
+      
+      <ConnectDatabaseDialog
+        open={showDatabaseDialog}
+        onOpenChange={setShowDatabaseDialog}
+        onDataImported={handleDatabaseImport}
       />
       
       {organizationMethod && pendingData && (
