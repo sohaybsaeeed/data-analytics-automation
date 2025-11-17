@@ -28,15 +28,14 @@ const Hero = () => {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            Transform Raw Data into
+            Enterprise-Grade
             <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Actionable Insights
+              Data Analytics Platform
             </span>
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Upload your data from any source and let our AI automatically discover patterns, 
-            trends, and opportunities—no data science degree required.
+            Advanced AI-powered analytics with DAX, pivot tables, statistical testing, and comprehensive visualizations—professional data science capabilities at your fingertips.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">

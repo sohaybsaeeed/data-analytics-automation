@@ -28,9 +28,6 @@ const CTA = () => {
               Get Started Free
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="outline" size="lg">
-              Schedule a Demo
-            </Button>
           </div>
           
           <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
