@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
+import DataSources from "@/components/DataSources";
 import HowItWorks from "@/components/HowItWorks";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
@@ -14,6 +15,7 @@ const Index = () => {
         <div id="features">
           <Features />
         </div>
+        <DataSources />
         <div id="how-it-works">
           <HowItWorks />
         </div>
