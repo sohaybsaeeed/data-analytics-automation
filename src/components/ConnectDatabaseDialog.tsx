@@ -16,10 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Code, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { QueryTemplates } from "./QueryTemplates";
+import { VisualQueryBuilder } from "./VisualQueryBuilder";
 
 interface ConnectDatabaseDialogProps {
   open: boolean;
@@ -40,6 +42,7 @@ export const ConnectDatabaseDialog = ({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [query, setQuery] = useState("SELECT * FROM table_name LIMIT 1000");
+  const [queryMode, setQueryMode] = useState<"manual" | "visual" | "templates">("visual");
 
   const saveQueryToHistory = (query: string) => {
     try {
@@ -123,7 +126,7 @@ export const ConnectDatabaseDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Connect External Database</DialogTitle>
           <DialogDescription>
@@ -200,24 +203,62 @@ export const ConnectDatabaseDialog = ({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="query">SQL Query</Label>
-            <textarea
-              id="query"
-              className="w-full min-h-[100px] px-3 py-2 text-sm rounded-md border border-input bg-background"
-              placeholder="SELECT * FROM table_name LIMIT 1000"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter your SQL query to fetch data. Limit to 10,000 rows for best performance.
-            </p>
-          </div>
+          <div className="space-y-3">
+            <Label>Query Builder</Label>
+            <Tabs value={queryMode} onValueChange={(v: any) => setQueryMode(v)}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="visual" className="flex items-center gap-2">
+                  <Wand2 className="w-4 h-4" />
+                  Visual
+                </TabsTrigger>
+                <TabsTrigger value="manual" className="flex items-center gap-2">
+                  <Code className="w-4 h-4" />
+                  SQL
+                </TabsTrigger>
+                <TabsTrigger value="templates" className="flex items-center gap-2">
+                  Templates
+                </TabsTrigger>
+              </TabsList>
 
-          <QueryTemplates 
-            onSelectQuery={setQuery} 
-            currentDbType={dbType}
-          />
+              <TabsContent value="visual" className="mt-3">
+                <VisualQueryBuilder 
+                  onQueryGenerated={setQuery}
+                  dbType={dbType}
+                />
+              </TabsContent>
+
+              <TabsContent value="manual" className="mt-3 space-y-2">
+                <Label htmlFor="query">SQL Query</Label>
+                <textarea
+                  id="query"
+                  className="w-full min-h-[200px] px-3 py-2 text-sm rounded-md border border-input bg-background font-mono"
+                  placeholder="SELECT * FROM table_name LIMIT 1000"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter your SQL query to fetch data. Limit to 10,000 rows for best performance.
+                </p>
+              </TabsContent>
+
+              <TabsContent value="templates" className="mt-3">
+                <QueryTemplates 
+                  onSelectQuery={(q) => {
+                    setQuery(q);
+                    setQueryMode("manual");
+                  }}
+                  currentDbType={dbType}
+                />
+              </TabsContent>
+            </Tabs>
+
+            {query && (
+              <div className="rounded-lg bg-muted p-3 mt-3">
+                <p className="text-xs font-medium mb-1 text-muted-foreground">Generated Query:</p>
+                <code className="text-xs block overflow-x-auto">{query}</code>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex justify-end gap-2">
