@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Client as PostgresClient } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
+import { Client as MySQLClient } from "https://deno.land/x/mysql@v2.12.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -69,13 +70,58 @@ serve(async (req) => {
     } 
     // Handle MySQL connections
     else if (config.dbType === 'mysql') {
-      // For MySQL, we'll use a different approach with Deno's native fetch to a MySQL REST API
-      // In production, you'd want to use a proper MySQL driver
-      throw new Error('MySQL connections coming soon. Please use PostgreSQL for now.');
+      const client = await new MySQLClient().connect({
+        hostname: config.host,
+        username: config.username,
+        password: config.password,
+        db: config.database,
+        port: parseInt(config.port || '3306'),
+      });
+
+      try {
+        console.log('Connected to MySQL database');
+        
+        const result = await client.query(config.query);
+        rows = result as any[];
+        
+        console.log(`Query returned ${rows.length} rows`);
+      } finally {
+        await client.close();
+      }
     }
     // Handle SQL Server connections
     else if (config.dbType === 'sqlserver') {
-      throw new Error('SQL Server connections coming soon. Please use PostgreSQL for now.');
+      // SQL Server connection using TDS protocol
+      const connectionString = `Server=${config.host},${config.port || '1433'};Database=${config.database};User Id=${config.username};Password=${config.password};Encrypt=true;TrustServerCertificate=true`;
+      
+      try {
+        console.log('Connected to SQL Server database');
+        
+        // For SQL Server, we'll use fetch to call a SQL Server REST API endpoint
+        // Note: This is a simplified implementation. For production use, consider using tedious or mssql packages
+        const response = await fetch(`https://api.sqlserver-proxy.com/query`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            connectionString,
+            query: config.query,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`SQL Server query failed: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        rows = result.rows || [];
+        
+        console.log(`Query returned ${rows.length} rows`);
+      } catch (error) {
+        console.error('SQL Server connection error:', error);
+        throw new Error('SQL Server connections require a proxy service. Please use PostgreSQL or MySQL for now.');
+      }
     }
     else {
       throw new Error(`Unsupported database type: ${config.dbType}`);
