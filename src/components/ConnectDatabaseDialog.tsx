@@ -19,6 +19,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { QueryTemplates } from "./QueryTemplates";
 
 interface ConnectDatabaseDialogProps {
   open: boolean;
@@ -39,6 +40,23 @@ export const ConnectDatabaseDialog = ({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [query, setQuery] = useState("SELECT * FROM table_name LIMIT 1000");
+
+  const saveQueryToHistory = (query: string) => {
+    try {
+      const history = localStorage.getItem("queryHistory");
+      const queries = history ? JSON.parse(history) : [];
+      
+      // Add new query to the beginning and remove duplicates
+      const updatedQueries = [query, ...queries.filter((q: string) => q !== query)];
+      
+      // Keep only last 10 queries
+      const limitedQueries = updatedQueries.slice(0, 10);
+      
+      localStorage.setItem("queryHistory", JSON.stringify(limitedQueries));
+    } catch (error) {
+      console.error("Failed to save query history:", error);
+    }
+  };
 
   const handleConnect = async () => {
     if (!host || !database || !username || !password) {
@@ -65,6 +83,10 @@ export const ConnectDatabaseDialog = ({
       if (data?.rows && data.rows.length > 0) {
         const fields = Object.keys(data.rows[0]);
         onDataImported(data.rows, fields);
+        
+        // Save successful query to history
+        saveQueryToHistory(query);
+        
         toast.success(`Successfully imported ${data.rows.length} rows from ${dbType} database`);
         onOpenChange(false);
         
@@ -191,6 +213,11 @@ export const ConnectDatabaseDialog = ({
               Enter your SQL query to fetch data. Limit to 10,000 rows for best performance.
             </p>
           </div>
+
+          <QueryTemplates 
+            onSelectQuery={setQuery} 
+            currentDbType={dbType}
+          />
         </div>
 
         <div className="flex justify-end gap-2">
