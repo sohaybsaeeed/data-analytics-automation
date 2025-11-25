@@ -37,7 +37,7 @@ const Features = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             Everything You Need to
-            <span className="block text-primary">Master Your Data</span>
+            <span className="block bg-transparent text-sky-600">Master Your Data</span>
           </h2>
           <p className="text-xl text-muted-foreground">
             Powerful features designed to turn complex data into clear, actionable insights
@@ -45,20 +45,7 @@ const Features = () => {
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => <Card key={index} className="p-6 hover:shadow-[var(--shadow-card)] transition-all duration-300 group border-border/50 hover:border-primary/50 text-slate-50 bg-violet-900">
-              {feature.image ? <div className="mb-6 rounded-lg overflow-hidden">
-                  
-                </div> : <div className="mb-6 w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center group-hover:shadow-[var(--shadow-glow)] transition-all duration-300">
-                  
-                </div>}
-              
-              <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                {feature.title}
-              </h3>
-              <p className="text-slate-300">
-                {feature.description}
-              </p>
-            </Card>)}
+          {features.map((feature, index) => {})}
         </div>
       </div>
     </section>;

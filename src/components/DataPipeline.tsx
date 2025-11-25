@@ -77,21 +77,7 @@ const DataPipeline = () => {
                   </Card>
                   
                   {/* Animated connector arrow */}
-                  {index < stages.length - 1 && <div className="absolute top-24 flex items-center" style={{
-                left: `${(index + 1) * (100 / stages.length)}%`,
-                transform: 'translateX(-50%)',
-                width: `${100 / stages.length}%`
-              }}>
-                      <div className="flex-1 h-0.5 bg-gradient-to-r from-primary/60 to-secondary/60 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" style={{
-                    animationDuration: '2s',
-                    animationDelay: `${index * 200}ms`
-                  }} />
-                      </div>
-                      <ArrowRight className="w-6 h-6 text-primary animate-pulse ml-2" style={{
-                  animationDelay: `${index * 200}ms`
-                }} />
-                    </div>}
+                  {index < stages.length - 1}
                 </div>)}
             </div>
           </div>

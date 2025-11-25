@@ -25,17 +25,17 @@ const Hero = () => {
             
 
 Data Analytics Platform
-            <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-center text-slate-800 bg-slate-300">
+            <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-center font-sans bg-slate-900 text-slate-950">
               Data Analytics Automation 
             </span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl max-w-2xl mx-auto text-slate-950 bg-transparent">
             Advanced AI-powered analytics with DAX, pivot tables, statistical testing, and comprehensive visualizations—professional data science capabilities at your fingertips.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button variant="hero" size="lg" className="group" onClick={() => window.location.href = '/auth'}>
+            <Button variant="hero" size="lg" onClick={() => window.location.href = '/auth'} className="group bg-slate-50 text-slate-50">
               ​Get Started   
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
