@@ -1,4 +1,4 @@
-import { Upload, Database, Cog, LineChart, Sparkles, ArrowRight } from "lucide-react";
+import { Upload, Database, Cog, LineChart, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 const DataPipeline = () => {
   const stages = [{
@@ -83,9 +83,7 @@ const DataPipeline = () => {
                 width: `${100 / stages.length}%`
               }}>
                       
-                      <ArrowRight className="w-6 h-6 text-primary animate-pulse ml-2" style={{
-                  animationDelay: `${index * 200}ms`
-                }} />
+                      
                     </div>}
                 </div>)}
             </div>
