@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { TrendingUp } from "lucide-react";
-
 const Navbar = () => {
-  return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  return <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
@@ -26,14 +24,10 @@ const Navbar = () => {
             <Button variant="ghost" className="hidden md:inline-flex" onClick={() => window.location.href = '/auth'}>
               Sign In
             </Button>
-            <Button variant="hero" onClick={() => window.location.href = '/auth'}>
-              Start Free Trial
-            </Button>
+            
           </div>
         </div>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navbar;
