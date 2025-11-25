@@ -28,6 +28,21 @@ interface JoinClause {
   rightColumn: string;
 }
 
+interface AggregateColumn {
+  id: string;
+  function: "COUNT" | "SUM" | "AVG" | "MIN" | "MAX";
+  column: string;
+  alias: string;
+}
+
+interface HavingCondition {
+  id: string;
+  aggregateFunction: string;
+  column: string;
+  operator: string;
+  value: string;
+}
+
 interface VisualQueryBuilderProps {
   onQueryGenerated: (query: string) => void;
   dbType: string;
@@ -40,6 +55,10 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
   const [newColumn, setNewColumn] = useState("");
   const [conditions, setConditions] = useState<Condition[]>([]);
   const [joins, setJoins] = useState<JoinClause[]>([]);
+  const [aggregateColumns, setAggregateColumns] = useState<AggregateColumn[]>([]);
+  const [groupByColumns, setGroupByColumns] = useState<string[]>([]);
+  const [newGroupByColumn, setNewGroupByColumn] = useState("");
+  const [havingConditions, setHavingConditions] = useState<HavingCondition[]>([]);
   const [orderBy, setOrderBy] = useState("");
   const [orderDirection, setOrderDirection] = useState<"ASC" | "DESC">("ASC");
   const [limit, setLimit] = useState("1000");
@@ -59,7 +78,7 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
 
   useEffect(() => {
     generateQuery();
-  }, [tableName, selectMode, selectedColumns, conditions, joins, orderBy, orderDirection, limit]);
+  }, [tableName, selectMode, selectedColumns, conditions, joins, aggregateColumns, groupByColumns, havingConditions, orderBy, orderDirection, limit]);
 
   const generateQuery = () => {
     if (!tableName) {
@@ -69,8 +88,23 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
 
     let query = "SELECT ";
 
-    // SELECT clause
-    if (selectMode === "all" || selectedColumns.length === 0) {
+    // SELECT clause with aggregates
+    const selectParts: string[] = [];
+    
+    if (aggregateColumns.length > 0) {
+      // When using aggregates, build the select clause differently
+      aggregateColumns.forEach((agg) => {
+        const aggExpr = `${agg.function}(${agg.column})${agg.alias ? ` AS ${agg.alias}` : ""}`;
+        selectParts.push(aggExpr);
+      });
+      
+      // Add group by columns to select
+      groupByColumns.forEach((col) => {
+        selectParts.push(col);
+      });
+      
+      query += selectParts.join(", ");
+    } else if (selectMode === "all" || selectedColumns.length === 0) {
       query += "*";
     } else {
       query += selectedColumns.join(", ");
@@ -109,6 +143,32 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
               return `${c.column} ${c.operator} '${c.value}'`;
             } else {
               return `${c.column} ${c.operator} ${c.value}`;
+            }
+          })
+          .join(" AND ");
+      }
+    }
+
+    // GROUP BY clause
+    if (groupByColumns.length > 0) {
+      query += ` GROUP BY ${groupByColumns.join(", ")}`;
+    }
+
+    // HAVING clause
+    if (havingConditions.length > 0) {
+      const validHavingConditions = havingConditions.filter(
+        (h) => h.aggregateFunction && h.column && h.operator && h.value
+      );
+
+      if (validHavingConditions.length > 0) {
+        query += " HAVING ";
+        query += validHavingConditions
+          .map((h) => {
+            const aggExpr = `${h.aggregateFunction}(${h.column})`;
+            if (typeof h.value === "string" && isNaN(Number(h.value))) {
+              return `${aggExpr} ${h.operator} '${h.value}'`;
+            } else {
+              return `${aggExpr} ${h.operator} ${h.value}`;
             }
           })
           .join(" AND ");
@@ -175,6 +235,51 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
 
   const removeJoin = (id: string) => {
     setJoins(joins.filter((j) => j.id !== id));
+  };
+
+  const addAggregateColumn = () => {
+    setAggregateColumns([
+      ...aggregateColumns,
+      { id: Math.random().toString(), function: "COUNT", column: "", alias: "" },
+    ]);
+  };
+
+  const updateAggregateColumn = (id: string, field: keyof AggregateColumn, value: string) => {
+    setAggregateColumns(
+      aggregateColumns.map((a) => (a.id === id ? { ...a, [field]: value } : a))
+    );
+  };
+
+  const removeAggregateColumn = (id: string) => {
+    setAggregateColumns(aggregateColumns.filter((a) => a.id !== id));
+  };
+
+  const addGroupByColumn = () => {
+    if (newGroupByColumn && !groupByColumns.includes(newGroupByColumn)) {
+      setGroupByColumns([...groupByColumns, newGroupByColumn]);
+      setNewGroupByColumn("");
+    }
+  };
+
+  const removeGroupByColumn = (column: string) => {
+    setGroupByColumns(groupByColumns.filter((c) => c !== column));
+  };
+
+  const addHavingCondition = () => {
+    setHavingConditions([
+      ...havingConditions,
+      { id: Math.random().toString(), aggregateFunction: "COUNT", column: "", operator: "=", value: "" },
+    ]);
+  };
+
+  const updateHavingCondition = (id: string, field: keyof HavingCondition, value: string) => {
+    setHavingConditions(
+      havingConditions.map((h) => (h.id === id ? { ...h, [field]: value } : h))
+    );
+  };
+
+  const removeHavingCondition = (id: string) => {
+    setHavingConditions(havingConditions.filter((h) => h.id !== id));
   };
 
   return (
@@ -345,6 +450,162 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
                 )}
                 <Button
                   onClick={() => removeCondition(condition.id)}
+                  size="sm"
+                  variant="ghost"
+                  type="button"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {/* AGGREGATE Functions */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Aggregate Functions</Label>
+              <Button onClick={addAggregateColumn} size="sm" variant="outline" type="button">
+                <Plus className="w-4 h-4 mr-1" />
+                Add Aggregate
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Use aggregate functions like COUNT, SUM, AVG for data analysis
+            </p>
+
+            {aggregateColumns.map((agg) => (
+              <div key={agg.id} className="flex gap-2 items-start p-3 border rounded-md bg-muted/50">
+                <Select
+                  value={agg.function}
+                  onValueChange={(v: any) => updateAggregateColumn(agg.id, "function", v)}
+                >
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-50 bg-background">
+                    <SelectItem value="COUNT">COUNT</SelectItem>
+                    <SelectItem value="SUM">SUM</SelectItem>
+                    <SelectItem value="AVG">AVG</SelectItem>
+                    <SelectItem value="MIN">MIN</SelectItem>
+                    <SelectItem value="MAX">MAX</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Column (or * for COUNT)"
+                  value={agg.column}
+                  onChange={(e) => updateAggregateColumn(agg.id, "column", e.target.value)}
+                  className="flex-1"
+                />
+                <Input
+                  placeholder="Alias (optional)"
+                  value={agg.alias}
+                  onChange={(e) => updateAggregateColumn(agg.id, "alias", e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={() => removeAggregateColumn(agg.id)}
+                  size="sm"
+                  variant="ghost"
+                  type="button"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {/* GROUP BY */}
+          <div className="space-y-2">
+            <Label>Group By Columns</Label>
+            <p className="text-xs text-muted-foreground">
+              Required when using aggregate functions
+            </p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Column name"
+                value={newGroupByColumn}
+                onChange={(e) => setNewGroupByColumn(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && addGroupByColumn()}
+              />
+              <Button onClick={addGroupByColumn} size="sm" type="button">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            {groupByColumns.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {groupByColumns.map((col) => (
+                  <Badge key={col} variant="secondary" className="gap-1">
+                    {col}
+                    <X
+                      className="w-3 h-3 cursor-pointer"
+                      onClick={() => removeGroupByColumn(col)}
+                    />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* HAVING Conditions */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Having Conditions</Label>
+              <Button onClick={addHavingCondition} size="sm" variant="outline" type="button">
+                <Plus className="w-4 h-4 mr-1" />
+                Add Having
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Filter results based on aggregate values
+            </p>
+
+            {havingConditions.map((having) => (
+              <div key={having.id} className="flex gap-2 items-start">
+                <Select
+                  value={having.aggregateFunction}
+                  onValueChange={(v) => updateHavingCondition(having.id, "aggregateFunction", v)}
+                >
+                  <SelectTrigger className="w-[110px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-50 bg-background">
+                    <SelectItem value="COUNT">COUNT</SelectItem>
+                    <SelectItem value="SUM">SUM</SelectItem>
+                    <SelectItem value="AVG">AVG</SelectItem>
+                    <SelectItem value="MIN">MIN</SelectItem>
+                    <SelectItem value="MAX">MAX</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Column"
+                  value={having.column}
+                  onChange={(e) => updateHavingCondition(having.id, "column", e.target.value)}
+                  className="flex-1"
+                />
+                <Select
+                  value={having.operator}
+                  onValueChange={(v) => updateHavingCondition(having.id, "operator", v)}
+                >
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-50 bg-background">
+                    <SelectItem value="=">=</SelectItem>
+                    <SelectItem value="!=">!=</SelectItem>
+                    <SelectItem value=">">{">"}</SelectItem>
+                    <SelectItem value="<">{"<"}</SelectItem>
+                    <SelectItem value=">=">{">="}</SelectItem>
+                    <SelectItem value="<=">{"<="}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Value"
+                  value={having.value}
+                  onChange={(e) => updateHavingCondition(having.id, "value", e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={() => removeHavingCondition(having.id)}
                   size="sm"
                   variant="ghost"
                   type="button"
