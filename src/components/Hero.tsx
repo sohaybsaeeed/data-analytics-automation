@@ -25,7 +25,7 @@ const Hero = () => {
             
 
 Data Analytics Platform
-            <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-center text-slate-800 bg-slate-300">
               Data Analytics Automation 
             </span>
           </h1>
