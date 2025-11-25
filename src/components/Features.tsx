@@ -35,13 +35,8 @@ const Features = () => {
   return <section className="py-24 bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Everything You Need to
-            <span className="block bg-transparent text-sky-600">Master Your Data</span>
-          </h2>
-          <p className="text-xl text-muted-foreground">
-            Powerful features designed to turn complex data into clear, actionable insights
-          </p>
+          
+          
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">

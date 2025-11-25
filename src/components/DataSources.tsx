@@ -48,13 +48,9 @@ const DataSources = () => {
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             Connect Your Data
-            <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              From Any Source
-            </span>
+            
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Seamlessly integrate with multiple file formats and database systems. Our platform supports all major data sources.
-          </p>
+          
         </div>
 
         <div className="grid gap-12 text-slate-950">
