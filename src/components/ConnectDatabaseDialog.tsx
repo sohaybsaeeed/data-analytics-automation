@@ -17,11 +17,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Code, Wand2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, Code, Wand2, AlertCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { QueryTemplates } from "./QueryTemplates";
 import { VisualQueryBuilder } from "./VisualQueryBuilder";
+import { validateSQLQuery, ValidationResult } from "@/lib/sqlValidator";
 
 interface ConnectDatabaseDialogProps {
   open: boolean;
@@ -43,6 +45,11 @@ export const ConnectDatabaseDialog = ({
   const [password, setPassword] = useState("");
   const [query, setQuery] = useState("SELECT * FROM table_name LIMIT 1000");
   const [queryMode, setQueryMode] = useState<"manual" | "visual" | "templates">("visual");
+  const [validationResult, setValidationResult] = useState<ValidationResult>({ 
+    isValid: true, 
+    errors: [], 
+    warnings: [] 
+  });
 
   const saveQueryToHistory = (query: string) => {
     try {
@@ -64,6 +71,15 @@ export const ConnectDatabaseDialog = ({
   const handleConnect = async () => {
     if (!host || !database || !username || !password) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    // Validate query before connecting
+    const validation = validateSQLQuery(query, dbType);
+    setValidationResult(validation);
+    
+    if (!validation.isValid) {
+      toast.error("Query validation failed. Please fix the errors before connecting.");
       return;
     }
 
@@ -109,6 +125,13 @@ export const ConnectDatabaseDialog = ({
     } finally {
       setConnecting(false);
     }
+  };
+
+  const handleQueryChange = (newQuery: string) => {
+    setQuery(newQuery);
+    // Validate query on change
+    const validation = validateSQLQuery(newQuery, dbType);
+    setValidationResult(validation);
   };
 
   const getDefaultPort = (type: string) => {
@@ -222,7 +245,7 @@ export const ConnectDatabaseDialog = ({
 
               <TabsContent value="visual" className="mt-3">
                 <VisualQueryBuilder 
-                  onQueryGenerated={setQuery}
+                  onQueryGenerated={handleQueryChange}
                   dbType={dbType}
                 />
               </TabsContent>
@@ -234,7 +257,7 @@ export const ConnectDatabaseDialog = ({
                   className="w-full min-h-[200px] px-3 py-2 text-sm rounded-md border border-input bg-background font-mono"
                   placeholder="SELECT * FROM table_name LIMIT 1000"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => handleQueryChange(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
                   Enter your SQL query to fetch data. Limit to 10,000 rows for best performance.
@@ -244,7 +267,7 @@ export const ConnectDatabaseDialog = ({
               <TabsContent value="templates" className="mt-3">
                 <QueryTemplates 
                   onSelectQuery={(q) => {
-                    setQuery(q);
+                    handleQueryChange(q);
                     setQueryMode("manual");
                   }}
                   currentDbType={dbType}
@@ -258,6 +281,35 @@ export const ConnectDatabaseDialog = ({
                 <code className="text-xs block overflow-x-auto">{query}</code>
               </div>
             )}
+
+            {/* Validation Results */}
+            {validationResult.errors.length > 0 && (
+              <Alert variant="destructive" className="mt-3">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Query Validation Errors</AlertTitle>
+                <AlertDescription>
+                  <ul className="list-disc list-inside space-y-1 mt-2">
+                    {validationResult.errors.map((error, index) => (
+                      <li key={index} className="text-sm">{error}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {validationResult.warnings.length > 0 && validationResult.errors.length === 0 && (
+              <Alert className="mt-3 border-yellow-500/50 bg-yellow-500/10">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <AlertTitle className="text-yellow-600">Query Warnings</AlertTitle>
+                <AlertDescription>
+                  <ul className="list-disc list-inside space-y-1 mt-2">
+                    {validationResult.warnings.map((warning, index) => (
+                      <li key={index} className="text-sm text-yellow-600">{warning}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
 
@@ -269,7 +321,10 @@ export const ConnectDatabaseDialog = ({
           >
             Cancel
           </Button>
-          <Button onClick={handleConnect} disabled={connecting}>
+          <Button 
+            onClick={handleConnect} 
+            disabled={connecting || !validationResult.isValid}
+          >
             {connecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Connect & Import
           </Button>
