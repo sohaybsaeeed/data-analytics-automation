@@ -5,9 +5,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-primary-foreground" />
-            </div>
+            
             <span className="text-xl font-bold">Data Analytics Automation</span>
           </div>
           
