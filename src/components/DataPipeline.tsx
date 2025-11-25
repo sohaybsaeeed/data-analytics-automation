@@ -67,7 +67,7 @@ const DataPipeline = () => {
                         <h3 className="font-bold text-lg mb-2">{stage.title}</h3>
                         <p className="text-sm text-muted-foreground mb-3">{stage.description}</p>
                         <div className="space-y-1">
-                          {stage.features.map(feature => <div key={feature} className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                          {stage.features.map(feature => <div key={feature} className="text-xs text-muted-foreground flex items-center justify-center gap-1 border">
                               <div className="w-1 h-1 rounded-full bg-secondary" />
                               {feature}
                             </div>)}
