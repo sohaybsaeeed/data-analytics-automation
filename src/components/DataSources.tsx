@@ -1,64 +1,50 @@
 import { FileSpreadsheet, Database, FileJson, FileText, CloudUpload, Link2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-
 const DataSources = () => {
-  const fileSources = [
-    {
-      icon: FileSpreadsheet,
-      name: "Excel Files",
-      description: "XLSX, XLS - Full support for spreadsheets with multiple sheets",
-      color: "text-green-500"
-    },
-    {
-      icon: FileText,
-      name: "CSV Files",
-      description: "Comma-separated values with automatic delimiter detection",
-      color: "text-blue-500"
-    },
-    {
-      icon: FileJson,
-      name: "JSON Data",
-      description: "Structured JSON files with nested object support",
-      color: "text-yellow-500"
-    },
-    {
-      icon: CloudUpload,
-      name: "Cloud Storage",
-      description: "Import from Google Drive, Dropbox, and cloud services",
-      color: "text-purple-500"
-    }
-  ];
-
-  const databaseSources = [
-    {
-      icon: Database,
-      name: "PostgreSQL",
-      description: "Direct connection to PostgreSQL databases",
-      color: "text-blue-600"
-    },
-    {
-      icon: Database,
-      name: "MySQL / MariaDB",
-      description: "Connect to MySQL and MariaDB instances",
-      color: "text-orange-500"
-    },
-    {
-      icon: Database,
-      name: "SQL Server",
-      description: "Microsoft SQL Server integration",
-      color: "text-red-500"
-    },
-    {
-      icon: Link2,
-      name: "REST APIs",
-      description: "Pull data from any REST API endpoint",
-      color: "text-indigo-500"
-    }
-  ];
-
-  return (
-    <section className="py-24 px-4 bg-muted/30">
-      <div className="container mx-auto">
+  const fileSources = [{
+    icon: FileSpreadsheet,
+    name: "Excel Files",
+    description: "XLSX, XLS - Full support for spreadsheets with multiple sheets",
+    color: "text-green-500"
+  }, {
+    icon: FileText,
+    name: "CSV Files",
+    description: "Comma-separated values with automatic delimiter detection",
+    color: "text-blue-500"
+  }, {
+    icon: FileJson,
+    name: "JSON Data",
+    description: "Structured JSON files with nested object support",
+    color: "text-yellow-500"
+  }, {
+    icon: CloudUpload,
+    name: "Cloud Storage",
+    description: "Import from Google Drive, Dropbox, and cloud services",
+    color: "text-purple-500"
+  }];
+  const databaseSources = [{
+    icon: Database,
+    name: "PostgreSQL",
+    description: "Direct connection to PostgreSQL databases",
+    color: "text-blue-600"
+  }, {
+    icon: Database,
+    name: "MySQL / MariaDB",
+    description: "Connect to MySQL and MariaDB instances",
+    color: "text-orange-500"
+  }, {
+    icon: Database,
+    name: "SQL Server",
+    description: "Microsoft SQL Server integration",
+    color: "text-red-500"
+  }, {
+    icon: Link2,
+    name: "REST APIs",
+    description: "Pull data from any REST API endpoint",
+    color: "text-indigo-500"
+  }];
+  return <section className="py-24 px-4 bg-muted/30">
+      <div className="container mx-auto text-slate-950">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             Connect Your Data
@@ -71,7 +57,7 @@ const DataSources = () => {
           </p>
         </div>
 
-        <div className="grid gap-12">
+        <div className="grid gap-12 text-slate-950">
           {/* File Formats Section */}
           <div>
             <h3 className="text-2xl font-semibold mb-6 flex items-center gap-2">
@@ -79,11 +65,7 @@ const DataSources = () => {
               File Formats
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {fileSources.map((source) => (
-                <Card 
-                  key={source.name}
-                  className="p-6 hover:shadow-lg transition-shadow bg-card border-border"
-                >
+              {fileSources.map(source => <Card key={source.name} className="p-6 hover:shadow-lg transition-shadow bg-card border-border">
                   <div className="flex flex-col items-center text-center space-y-4">
                     <div className={`w-14 h-14 rounded-xl bg-background flex items-center justify-center ${source.color}`}>
                       <source.icon className="w-8 h-8" />
@@ -93,8 +75,7 @@ const DataSources = () => {
                       <p className="text-sm text-muted-foreground">{source.description}</p>
                     </div>
                   </div>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
 
@@ -105,11 +86,7 @@ const DataSources = () => {
               Database Connections
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {databaseSources.map((source) => (
-                <Card 
-                  key={source.name}
-                  className="p-6 hover:shadow-lg transition-shadow bg-card border-border"
-                >
+              {databaseSources.map(source => <Card key={source.name} className="p-6 hover:shadow-lg transition-shadow bg-card border-border">
                   <div className="flex flex-col items-center text-center space-y-4">
                     <div className={`w-14 h-14 rounded-xl bg-background flex items-center justify-center ${source.color}`}>
                       <source.icon className="w-8 h-8" />
@@ -119,8 +96,7 @@ const DataSources = () => {
                       <p className="text-sm text-muted-foreground">{source.description}</p>
                     </div>
                   </div>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
         </div>
@@ -143,8 +119,6 @@ const DataSources = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default DataSources;

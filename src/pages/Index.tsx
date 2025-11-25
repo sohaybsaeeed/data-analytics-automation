@@ -6,10 +6,8 @@ import DataPipeline from "@/components/DataPipeline";
 import HowItWorks from "@/components/HowItWorks";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
-
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navbar />
       <main>
         <Hero />
@@ -17,15 +15,13 @@ const Index = () => {
           <Features />
         </div>
         <DataSources />
-        <DataPipeline />
+        <DataPipeline className="bg-slate-400 text-transparent" />
         <div id="how-it-works">
           <HowItWorks />
         </div>
         <CTA />
       </main>
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
