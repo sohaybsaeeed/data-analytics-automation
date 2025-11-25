@@ -38,7 +38,7 @@ const DataPipeline = () => {
       
       <div className="container mx-auto relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-700">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
             From Data to Insights
             <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               In Minutes, Not Hours
@@ -50,24 +50,24 @@ const DataPipeline = () => {
         </div>
 
         {/* Pipeline stages */}
-        <div className="relative">
+        <div className="relative text-slate-950">
           {/* Desktop view - horizontal flow */}
           <div className="hidden lg:block">
             <div className="flex items-start justify-between gap-4 mb-8">
-              {stages.map((stage, index) => <div key={stage.title} className="flex-1 flex flex-col items-center">
+              {stages.map((stage, index) => <div key={stage.title} className="flex-1 flex flex-col items-center text-slate-900">
                   {/* Stage card */}
-                  <Card style={{
+                  <Card className="w-full p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-card border-border group cursor-pointer animate-fade-in" style={{
                 animationDelay: `${index * 100}ms`
-              }} className="w-full p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-border group cursor-pointer animate-fade-in bg-slate-800">
+              }}>
                     <div className="flex flex-col items-center text-center space-y-4">
                       <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${stage.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
                         <stage.icon className="w-8 h-8 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg mb-2 text-slate-50">{stage.title}</h3>
-                        <p className="text-sm mb-3 text-slate-300">{stage.description}</p>
+                        <h3 className="font-bold text-lg mb-2">{stage.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-3">{stage.description}</p>
                         <div className="space-y-1">
-                          {stage.features.map(feature => <div key={feature} className="text-xs flex items-center justify-center gap-1 text-slate-300">
+                          {stage.features.map(feature => <div key={feature} className="text-xs text-muted-foreground flex items-center justify-center gap-1">
                               <div className="w-1 h-1 rounded-full bg-secondary" />
                               {feature}
                             </div>)}
@@ -77,7 +77,21 @@ const DataPipeline = () => {
                   </Card>
                   
                   {/* Animated connector arrow */}
-                  {index < stages.length - 1}
+                  {index < stages.length - 1 && <div className="absolute top-24 flex items-center" style={{
+                left: `${(index + 1) * (100 / stages.length)}%`,
+                transform: 'translateX(-50%)',
+                width: `${100 / stages.length}%`
+              }}>
+                      <div className="flex-1 h-0.5 bg-gradient-to-r from-primary/60 to-secondary/60 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" style={{
+                    animationDuration: '2s',
+                    animationDelay: `${index * 200}ms`
+                  }} />
+                      </div>
+                      <ArrowRight className="w-6 h-6 text-primary animate-pulse ml-2" style={{
+                  animationDelay: `${index * 200}ms`
+                }} />
+                    </div>}
                 </div>)}
             </div>
           </div>
@@ -122,19 +136,19 @@ const DataPipeline = () => {
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="text-center p-6 rounded-lg bg-primary/5 border border-primary/10">
             <div className="text-3xl font-bold text-primary mb-2">10x</div>
-            <div className="text-sm text-slate-950">Faster Analysis</div>
+            <div className="text-sm text-muted-foreground">Faster Analysis</div>
           </div>
           <div className="text-center p-6 rounded-lg bg-secondary/5 border border-secondary/10">
-            <div className="text-3xl font-bold mb-2 bg-transparent text-slate-950">95%</div>
-            <div className="text-sm text-slate-950">Accuracy Rate</div>
+            <div className="text-3xl font-bold text-secondary mb-2">95%</div>
+            <div className="text-sm text-muted-foreground">Accuracy Rate</div>
           </div>
           <div className="text-center p-6 rounded-lg bg-primary/5 border border-primary/10">
             <div className="text-3xl font-bold text-primary mb-2">1M+</div>
-            <div className="text-sm text-slate-950">Rows Processed</div>
+            <div className="text-sm text-muted-foreground">Rows Processed</div>
           </div>
           <div className="text-center p-6 rounded-lg bg-secondary/5 border border-secondary/10">
             <div className="text-3xl font-bold text-secondary mb-2">24/7</div>
-            <div className="text-sm text-slate-950">Automated</div>
+            <div className="text-sm text-muted-foreground">Automated</div>
           </div>
         </div>
       </div>
