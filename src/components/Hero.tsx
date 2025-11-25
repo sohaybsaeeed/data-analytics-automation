@@ -39,11 +39,7 @@ Data Analytics Platform
               Start Free Trial
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="outline" size="lg" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({
-            behavior: 'smooth'
-          })}>
-              Watch Demo
-            </Button>
+            
           </div>
           
           <div className="pt-8 flex items-center justify-center gap-8 text-sm text-muted-foreground">
