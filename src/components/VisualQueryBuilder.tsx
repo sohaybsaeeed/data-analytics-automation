@@ -20,6 +20,14 @@ interface Condition {
   value: string;
 }
 
+interface JoinClause {
+  id: string;
+  tableName: string;
+  joinType: "INNER JOIN" | "LEFT JOIN" | "RIGHT JOIN" | "FULL OUTER JOIN";
+  leftColumn: string;
+  rightColumn: string;
+}
+
 interface VisualQueryBuilderProps {
   onQueryGenerated: (query: string) => void;
   dbType: string;
@@ -31,6 +39,7 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [newColumn, setNewColumn] = useState("");
   const [conditions, setConditions] = useState<Condition[]>([]);
+  const [joins, setJoins] = useState<JoinClause[]>([]);
   const [orderBy, setOrderBy] = useState("");
   const [orderDirection, setOrderDirection] = useState<"ASC" | "DESC">("ASC");
   const [limit, setLimit] = useState("1000");
@@ -50,7 +59,7 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
 
   useEffect(() => {
     generateQuery();
-  }, [tableName, selectMode, selectedColumns, conditions, orderBy, orderDirection, limit]);
+  }, [tableName, selectMode, selectedColumns, conditions, joins, orderBy, orderDirection, limit]);
 
   const generateQuery = () => {
     if (!tableName) {
@@ -69,6 +78,16 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
 
     // FROM clause
     query += ` FROM ${tableName}`;
+
+    // JOIN clauses
+    if (joins.length > 0) {
+      const validJoins = joins.filter(
+        (j) => j.tableName && j.leftColumn && j.rightColumn
+      );
+      validJoins.forEach((join) => {
+        query += ` ${join.joinType} ${join.tableName} ON ${join.leftColumn} = ${join.rightColumn}`;
+      });
+    }
 
     // WHERE clause
     if (conditions.length > 0) {
@@ -137,6 +156,27 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
     setConditions(conditions.filter((c) => c.id !== id));
   };
 
+  const addJoin = () => {
+    setJoins([
+      ...joins,
+      {
+        id: Math.random().toString(),
+        tableName: "",
+        joinType: "INNER JOIN",
+        leftColumn: "",
+        rightColumn: "",
+      },
+    ]);
+  };
+
+  const updateJoin = (id: string, field: keyof JoinClause, value: string) => {
+    setJoins(joins.map((j) => (j.id === id ? { ...j, [field]: value } : j)));
+  };
+
+  const removeJoin = (id: string) => {
+    setJoins(joins.filter((j) => j.id !== id));
+  };
+
   return (
     <div className="space-y-4 rounded-lg border bg-card p-4">
       <div className="flex items-center gap-2 mb-4">
@@ -198,6 +238,68 @@ export const VisualQueryBuilder = ({ onQueryGenerated, dbType }: VisualQueryBuil
                 )}
               </div>
             )}
+          </div>
+
+          {/* JOIN Tables */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Join Tables</Label>
+              <Button onClick={addJoin} size="sm" variant="outline" type="button">
+                <Plus className="w-4 h-4 mr-1" />
+                Add Join
+              </Button>
+            </div>
+
+            {joins.map((join) => (
+              <div key={join.id} className="space-y-2 p-3 border rounded-md bg-muted/50">
+                <div className="flex gap-2 items-start">
+                  <Select
+                    value={join.joinType}
+                    onValueChange={(v: any) => updateJoin(join.id, "joinType", v)}
+                  >
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-background">
+                      <SelectItem value="INNER JOIN">INNER JOIN</SelectItem>
+                      <SelectItem value="LEFT JOIN">LEFT JOIN</SelectItem>
+                      <SelectItem value="RIGHT JOIN">RIGHT JOIN</SelectItem>
+                      <SelectItem value="FULL OUTER JOIN">FULL OUTER JOIN</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    placeholder="Table name"
+                    value={join.tableName}
+                    onChange={(e) => updateJoin(join.id, "tableName", e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={() => removeJoin(join.id)}
+                    size="sm"
+                    variant="ghost"
+                    type="button"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Label className="text-xs text-muted-foreground whitespace-nowrap">ON</Label>
+                  <Input
+                    placeholder="table1.column"
+                    value={join.leftColumn}
+                    onChange={(e) => updateJoin(join.id, "leftColumn", e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="text-muted-foreground">=</span>
+                  <Input
+                    placeholder="table2.column"
+                    value={join.rightColumn}
+                    onChange={(e) => updateJoin(join.id, "rightColumn", e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* WHERE Conditions */}
