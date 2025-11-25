@@ -17,7 +17,7 @@ const Index = () => {
         <DataSources />
         <DataPipeline className="bg-slate-400 text-transparent" />
         <div id="how-it-works">
-          <HowItWorks />
+          
         </div>
         <CTA />
       </main>

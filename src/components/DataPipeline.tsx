@@ -53,7 +53,7 @@ const DataPipeline = () => {
         <div className="relative text-slate-950">
           {/* Desktop view - horizontal flow */}
           <div className="hidden lg:block">
-            <div className="flex items-start justify-between gap-4 mb-8">
+            <div className="gap-4 mb-8 flex-row flex items-start justify-between">
               {stages.map((stage, index) => <div key={stage.title} className="flex-1 flex flex-col items-center text-slate-900">
                   {/* Stage card */}
                   <Card className="w-full p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-card border-border group cursor-pointer animate-fade-in" style={{
@@ -65,9 +65,9 @@ const DataPipeline = () => {
                       </div>
                       <div>
                         <h3 className="font-bold text-lg mb-2">{stage.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-3">{stage.description}</p>
+                        <p className="text-sm mb-3 text-slate-950">{stage.description}</p>
                         <div className="space-y-1">
-                          {stage.features.map(feature => <div key={feature} className="text-xs text-muted-foreground flex items-center justify-center gap-1 border">
+                          {stage.features.map(feature => <div key={feature} className="text-xs flex items-center justify-center gap-1 border text-slate-950">
                               <div className="w-1 h-1 rounded-full bg-secondary" />
                               {feature}
                             </div>)}

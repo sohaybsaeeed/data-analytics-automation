@@ -24,10 +24,8 @@ const Hero = () => {
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
             
 
-Data Analytics Platform
-            <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-center font-sans bg-slate-900 text-slate-950">
-              Data Analytics Automation 
-            </span>
+Data Analytics Automation    
+            
           </h1>
           
           <p className="text-xl md:text-2xl max-w-2xl mx-auto text-slate-950 bg-transparent">
