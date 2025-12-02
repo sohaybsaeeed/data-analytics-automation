@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-
 const CTA = () => {
-  return (
-    <section className="py-32 relative overflow-hidden">
+  return <section className="py-32 relative overflow-hidden">
       {/* Subtle background elements */}
       <div className="absolute inset-0 bg-gradient-to-b from-card via-background to-card" />
       <div className="absolute top-1/2 left-1/4 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[150px]" />
@@ -26,27 +24,15 @@ const CTA = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button 
-              variant="hero" 
-              size="lg" 
-              className="group min-w-[200px]" 
-              onClick={() => window.location.href = '/auth'}
-            >
+            <Button variant="hero" size="lg" className="group min-w-[200px]" onClick={() => window.location.href = '/auth'}>
               Get Started Free
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
           
-          <div className="pt-8 flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground">
-            <span>✓ No credit card required</span>
-            <span>✓ 14-day free trial</span>
-            <span>✓ Cancel anytime</span>
-            <span>✓ Setup in 5 minutes</span>
-          </div>
+          
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default CTA;
