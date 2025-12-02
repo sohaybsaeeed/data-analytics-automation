@@ -44,21 +44,10 @@ const Features = () => {
   return (
     <section className="py-24 bg-card">
       <div className="container mx-auto px-4">
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <span className="text-xs font-medium tracking-[0.2em] uppercase text-secondary mb-4 block">
-            Capabilities
-          </span>
-          <h2 className="text-4xl md:text-5xl font-semibold mb-6">
-            Everything You Need for
-            <span className="block text-gradient mt-2">Data Excellence</span>
-          </h2>
-          <p className="text-muted-foreground text-lg leading-relaxed">
-            Comprehensive tools designed for professionals who demand precision and elegance in their analytics workflow.
-          </p>
-        </div>
+        <div className="text-center max-w-3xl mx-auto mb-16" />
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
+          {features.map((feature) => (
             <Card 
               key={feature.title} 
               className="group p-8 bg-background border-border hover:border-secondary/30 transition-all duration-500 hover:shadow-[var(--shadow-card)]"
