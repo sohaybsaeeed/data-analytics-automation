@@ -5,15 +5,13 @@ import DataSources from "@/components/DataSources";
 import DataPipeline from "@/components/DataPipeline";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
-
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navbar />
       <main>
         <Hero />
         <div id="features">
-          <Features />
+          
         </div>
         <DataSources />
         <DataPipeline />
@@ -21,8 +19,6 @@ const Index = () => {
         <CTA />
       </main>
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
