@@ -15,17 +15,14 @@ const CTA = () => {
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-3xl mx-auto text-center space-y-10">
-          <span className="text-xs font-medium tracking-[0.2em] uppercase text-secondary">
-            Get Started Today
-          </span>
-          
           <h2 className="text-4xl md:text-6xl font-semibold leading-tight">
             Ready to Transform Your
             <span className="block text-gradient mt-2">Data Into Growth?</span>
           </h2>
           
           <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Join thousands of companies already using AI-powered insights to make better decisions, faster.
+            Join thousands of companies already using AI-powered insights to make better decisions, 
+            faster. Start your free 14-day trial today—no credit card required.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
@@ -40,19 +37,11 @@ const CTA = () => {
             </Button>
           </div>
           
-          <div className="pt-8 flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground/60">
-            <span className="flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-secondary" />
-              No credit card required
-            </span>
-            <span className="flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-secondary" />
-              14-day free trial
-            </span>
-            <span className="flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-secondary" />
-              Cancel anytime
-            </span>
+          <div className="pt-8 flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground">
+            <span>✓ No credit card required</span>
+            <span>✓ 14-day free trial</span>
+            <span>✓ Cancel anytime</span>
+            <span>✓ Setup in 5 minutes</span>
           </div>
         </div>
       </div>

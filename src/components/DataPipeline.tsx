@@ -38,11 +38,8 @@ const DataPipeline = () => {
   return (
     <section className="py-24 px-4 relative overflow-hidden bg-card">
       <div className="container mx-auto relative z-10">
-        <div className="text-center mb-20">
-          <span className="text-xs font-medium tracking-[0.2em] uppercase text-secondary mb-4 block">
-            Workflow
-          </span>
-          <h2 className="text-4xl md:text-5xl font-semibold mb-6">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-semibold mb-4">
             From Data to Insights
             <span className="block text-gradient mt-2">In Minutes, Not Hours</span>
           </h2>
@@ -60,16 +57,12 @@ const DataPipeline = () => {
                 <div key={stage.title} className="relative">
                   <Card 
                     className="group h-full p-6 bg-background border-border hover:border-secondary/30 transition-all duration-500"
-                    style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div className="flex flex-col items-center text-center space-y-5">
                       <div className="w-14 h-14 flex items-center justify-center bg-primary/5 border border-primary/10 group-hover:bg-secondary/10 group-hover:border-secondary/20 transition-all duration-300">
                         <stage.icon className="w-6 h-6 text-primary group-hover:text-secondary transition-colors" />
                       </div>
                       <div>
-                        <span className="text-xs font-medium tracking-wider uppercase text-muted-foreground/60 mb-2 block">
-                          Step {index + 1}
-                        </span>
                         <h3 className="font-semibold text-lg mb-2">{stage.title}</h3>
                         <p className="text-sm text-muted-foreground mb-4">{stage.description}</p>
                         <div className="space-y-2">
@@ -106,9 +99,6 @@ const DataPipeline = () => {
                       <stage.icon className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <span className="text-xs font-medium tracking-wider uppercase text-muted-foreground/60 mb-1 block">
-                        Step {index + 1}
-                      </span>
                       <h3 className="font-semibold text-lg mb-1">{stage.title}</h3>
                       <p className="text-sm text-muted-foreground mb-3">{stage.description}</p>
                       <div className="flex flex-wrap gap-3">
@@ -138,13 +128,13 @@ const DataPipeline = () => {
         </div>
 
         {/* Statistics row */}
-        <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
             { value: "10x", label: "Faster Analysis" },
             { value: "95%", label: "Accuracy Rate" },
             { value: "1M+", label: "Rows Processed" },
             { value: "24/7", label: "Automated" }
-          ].map((stat, index) => (
+          ].map((stat) => (
             <div 
               key={stat.label}
               className="text-center p-8 bg-background border border-border"

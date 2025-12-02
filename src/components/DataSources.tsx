@@ -51,23 +51,17 @@ const DataSources = () => {
   return (
     <section className="py-24 px-4 bg-background">
       <div className="container mx-auto">
-        <div className="text-center mb-20">
-          <span className="text-xs font-medium tracking-[0.2em] uppercase text-secondary mb-4 block">
-            Integrations
-          </span>
-          <h2 className="text-4xl md:text-5xl font-semibold mb-6">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-semibold mb-4">
             Connect Your Data
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Seamlessly integrate with your existing data infrastructure
-          </p>
         </div>
 
         <div className="grid gap-16">
           {/* File Formats Section */}
           <div>
             <h3 className="text-sm font-medium tracking-[0.15em] uppercase text-muted-foreground mb-8 flex items-center gap-3">
-              <div className="w-8 h-px bg-secondary" />
+              <FileText className="w-5 h-5 text-primary" />
               File Formats
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -93,7 +87,7 @@ const DataSources = () => {
           {/* Database Connections Section */}
           <div>
             <h3 className="text-sm font-medium tracking-[0.15em] uppercase text-muted-foreground mb-8 flex items-center gap-3">
-              <div className="w-8 h-px bg-secondary" />
+              <Database className="w-5 h-5 text-primary" />
               Database Connections
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -118,20 +112,20 @@ const DataSources = () => {
         </div>
 
         {/* Additional Info */}
-        <div className="mt-16 text-center">
+        <div className="mt-12 text-center">
           <div className="inline-flex items-center gap-8 px-8 py-5 border border-border bg-card">
             <div className="flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
+              <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
               <span className="text-sm text-muted-foreground">Real-time sync</span>
             </div>
             <div className="w-px h-4 bg-border" />
             <div className="flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
+              <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
               <span className="text-sm text-muted-foreground">Secure connections</span>
             </div>
             <div className="w-px h-4 bg-border" />
             <div className="flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-secondary" />
+              <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
               <span className="text-sm text-muted-foreground">Automatic schema detection</span>
             </div>
           </div>
