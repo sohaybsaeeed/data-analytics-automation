@@ -3,38 +3,56 @@ import { ArrowRight } from "lucide-react";
 
 const CTA = () => {
   return (
-    <section className="py-24 relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/10 to-primary/10" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(217,91,40,0.1),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(6,182,212,0.1),transparent_50%)]" />
+    <section className="py-32 relative overflow-hidden">
+      {/* Subtle background elements */}
+      <div className="absolute inset-0 bg-gradient-to-b from-card via-background to-card" />
+      <div className="absolute top-1/2 left-1/4 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[150px]" />
+      <div className="absolute bottom-1/2 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px]" />
+      
+      {/* Decorative lines */}
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <h2 className="text-4xl md:text-6xl font-bold">
+        <div className="max-w-3xl mx-auto text-center space-y-10">
+          <span className="text-xs font-medium tracking-[0.2em] uppercase text-secondary">
+            Get Started Today
+          </span>
+          
+          <h2 className="text-4xl md:text-6xl font-semibold leading-tight">
             Ready to Transform Your
-            <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Data Into Growth?
-            </span>
+            <span className="block text-gradient mt-2">Data Into Growth?</span>
           </h2>
           
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of companies already using AI-powered insights to make better decisions, 
-            faster. Start your free 14-day trial today—no credit card required.
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            Join thousands of companies already using AI-powered insights to make better decisions, faster.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button variant="hero" size="lg" className="group" onClick={() => window.location.href = '/auth'}>
+            <Button 
+              variant="hero" 
+              size="lg" 
+              className="group min-w-[200px]" 
+              onClick={() => window.location.href = '/auth'}
+            >
               Get Started Free
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
           
-          <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-            <span>✓ No credit card required</span>
-            <span>✓ 14-day free trial</span>
-            <span>✓ Cancel anytime</span>
-            <span>✓ Setup in 5 minutes</span>
+          <div className="pt-8 flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground/60">
+            <span className="flex items-center gap-2">
+              <div className="w-1 h-1 rounded-full bg-secondary" />
+              No credit card required
+            </span>
+            <span className="flex items-center gap-2">
+              <div className="w-1 h-1 rounded-full bg-secondary" />
+              14-day free trial
+            </span>
+            <span className="flex items-center gap-2">
+              <div className="w-1 h-1 rounded-full bg-secondary" />
+              Cancel anytime
+            </span>
           </div>
         </div>
       </div>

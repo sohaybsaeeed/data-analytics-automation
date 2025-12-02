@@ -1,150 +1,162 @@
 import { Upload, Database, Cog, LineChart, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
+
 const DataPipeline = () => {
-  const stages = [{
-    icon: Upload,
-    title: "Data Import",
-    description: "Upload files or connect databases",
-    color: "from-blue-500 to-blue-600",
-    features: ["Excel, CSV, JSON", "SQL Databases", "REST APIs"]
-  }, {
-    icon: Database,
-    title: "Data Processing",
-    description: "Clean, transform, and organize",
-    color: "from-purple-500 to-purple-600",
-    features: ["Auto-cleaning", "Schema detection", "Type inference"]
-  }, {
-    icon: Cog,
-    title: "Analysis Engine",
-    description: "DAX, statistics, and calculations",
-    color: "from-orange-500 to-orange-600",
-    features: ["DAX formulas", "Statistical tests", "Pivot tables"]
-  }, {
-    icon: LineChart,
-    title: "Visualization",
-    description: "Interactive charts and graphs",
-    color: "from-green-500 to-green-600",
-    features: ["15+ chart types", "Custom themes", "Real-time updates"]
-  }, {
-    icon: Sparkles,
-    title: "AI Insights",
-    description: "Automated recommendations",
-    color: "from-pink-500 to-pink-600",
-    features: ["Pattern detection", "Anomaly alerts", "Predictions"]
-  }];
-  return <section className="py-24 px-4 relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
-      
+  const stages = [
+    {
+      icon: Upload,
+      title: "Data Import",
+      description: "Upload files or connect databases",
+      features: ["Excel, CSV, JSON", "SQL Databases", "REST APIs"]
+    },
+    {
+      icon: Database,
+      title: "Data Processing",
+      description: "Clean, transform, and organize",
+      features: ["Auto-cleaning", "Schema detection", "Type inference"]
+    },
+    {
+      icon: Cog,
+      title: "Analysis Engine",
+      description: "DAX, statistics, and calculations",
+      features: ["DAX formulas", "Statistical tests", "Pivot tables"]
+    },
+    {
+      icon: LineChart,
+      title: "Visualization",
+      description: "Interactive charts and graphs",
+      features: ["15+ chart types", "Custom themes", "Real-time updates"]
+    },
+    {
+      icon: Sparkles,
+      title: "AI Insights",
+      description: "Automated recommendations",
+      features: ["Pattern detection", "Anomaly alerts", "Predictions"]
+    }
+  ];
+
+  return (
+    <section className="py-24 px-4 relative overflow-hidden bg-card">
       <div className="container mx-auto relative z-10">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+        <div className="text-center mb-20">
+          <span className="text-xs font-medium tracking-[0.2em] uppercase text-secondary mb-4 block">
+            Workflow
+          </span>
+          <h2 className="text-4xl md:text-5xl font-semibold mb-6">
             From Data to Insights
-            <span className="block mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              In Minutes, Not Hours
-            </span>
+            <span className="block text-gradient mt-2">In Minutes, Not Hours</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Watch your data flow through our intelligent pipeline, transforming raw information into actionable business intelligence.
           </p>
         </div>
 
         {/* Pipeline stages */}
-        <div className="relative text-slate-950">
+        <div className="relative">
           {/* Desktop view - horizontal flow */}
           <div className="hidden lg:block">
-            <div className="gap-4 mb-8 flex-row flex items-start justify-between">
-              {stages.map((stage, index) => <div key={stage.title} className="flex-1 flex flex-col items-center text-slate-900">
-                  {/* Stage card */}
-                  <Card className="w-full p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-card border-border group cursor-pointer animate-fade-in" style={{
-                animationDelay: `${index * 100}ms`
-              }}>
-                    <div className="flex flex-col items-center text-center space-y-4">
-                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${stage.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                        <stage.icon className="w-8 h-8 text-white" />
+            <div className="grid grid-cols-5 gap-6">
+              {stages.map((stage, index) => (
+                <div key={stage.title} className="relative">
+                  <Card 
+                    className="group h-full p-6 bg-background border-border hover:border-secondary/30 transition-all duration-500"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="flex flex-col items-center text-center space-y-5">
+                      <div className="w-14 h-14 flex items-center justify-center bg-primary/5 border border-primary/10 group-hover:bg-secondary/10 group-hover:border-secondary/20 transition-all duration-300">
+                        <stage.icon className="w-6 h-6 text-primary group-hover:text-secondary transition-colors" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg mb-2">{stage.title}</h3>
-                        <p className="text-sm mb-3 text-slate-950">{stage.description}</p>
-                        <div className="space-y-1">
-                          {stage.features.map(feature => <div key={feature} className="text-xs flex items-center justify-center gap-1 border text-slate-950">
-                              <div className="w-1 h-1 rounded-full bg-secondary" />
+                        <span className="text-xs font-medium tracking-wider uppercase text-muted-foreground/60 mb-2 block">
+                          Step {index + 1}
+                        </span>
+                        <h3 className="font-semibold text-lg mb-2">{stage.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-4">{stage.description}</p>
+                        <div className="space-y-2">
+                          {stage.features.map((feature) => (
+                            <div 
+                              key={feature} 
+                              className="text-xs text-muted-foreground/80 flex items-center justify-center gap-2"
+                            >
+                              <div className="w-1 h-1 rounded-full bg-secondary/60" />
                               {feature}
-                            </div>)}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
                   </Card>
                   
-                  {/* Animated connector arrow */}
-                  {index < stages.length - 1 && <div className="absolute top-24 flex items-center" style={{
-                left: `${(index + 1) * (100 / stages.length)}%`,
-                transform: 'translateX(-50%)',
-                width: `${100 / stages.length}%`
-              }}>
-                      
-                      
-                    </div>}
-                </div>)}
+                  {/* Connector line */}
+                  {index < stages.length - 1 && (
+                    <div className="absolute top-1/2 -right-3 w-6 h-px bg-gradient-to-r from-border to-secondary/30" />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Mobile/Tablet view - vertical flow */}
-          <div className="lg:hidden space-y-6">
-            {stages.map((stage, index) => <div key={stage.title} className="relative">
-                <Card className="p-6 hover:shadow-xl transition-all duration-300 bg-card border-border animate-fade-in" style={{
-              animationDelay: `${index * 100}ms`
-            }}>
-                  <div className="flex items-start gap-4">
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${stage.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
-                      <stage.icon className="w-7 h-7 text-white" />
+          <div className="lg:hidden space-y-4">
+            {stages.map((stage, index) => (
+              <div key={stage.title} className="relative">
+                <Card className="p-6 bg-background border-border">
+                  <div className="flex items-start gap-5">
+                    <div className="w-12 h-12 flex items-center justify-center bg-primary/5 border border-primary/10 flex-shrink-0">
+                      <stage.icon className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-lg mb-1">{stage.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{stage.description}</p>
-                      <div className="space-y-1">
-                        {stage.features.map(feature => <div key={feature} className="text-xs text-muted-foreground flex items-center gap-1">
-                            <div className="w-1 h-1 rounded-full bg-secondary" />
+                      <span className="text-xs font-medium tracking-wider uppercase text-muted-foreground/60 mb-1 block">
+                        Step {index + 1}
+                      </span>
+                      <h3 className="font-semibold text-lg mb-1">{stage.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">{stage.description}</p>
+                      <div className="flex flex-wrap gap-3">
+                        {stage.features.map((feature) => (
+                          <span 
+                            key={feature} 
+                            className="text-xs text-muted-foreground/80 flex items-center gap-1"
+                          >
+                            <div className="w-1 h-1 rounded-full bg-secondary/60" />
                             {feature}
-                          </div>)}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </Card>
                 
                 {/* Vertical connector */}
-                {index < stages.length - 1 && <div className="flex justify-center py-2">
-                    <div className="w-0.5 h-8 bg-gradient-to-b from-primary/60 to-secondary/60 relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary to-transparent animate-pulse" style={{
-                  animationDuration: '2s',
-                  animationDelay: `${index * 200}ms`
-                }} />
-                    </div>
-                  </div>}
-              </div>)}
+                {index < stages.length - 1 && (
+                  <div className="flex justify-center py-2">
+                    <div className="w-px h-6 bg-gradient-to-b from-border to-secondary/30" />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Statistics row */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="text-center p-6 rounded-lg bg-primary/5 border border-primary/10">
-            <div className="text-3xl font-bold text-primary mb-2">10x</div>
-            <div className="text-sm text-muted-foreground">Faster Analysis</div>
-          </div>
-          <div className="text-center p-6 rounded-lg bg-secondary/5 border border-secondary/10">
-            <div className="text-3xl font-bold text-secondary mb-2">95%</div>
-            <div className="text-sm text-muted-foreground">Accuracy Rate</div>
-          </div>
-          <div className="text-center p-6 rounded-lg bg-primary/5 border border-primary/10">
-            <div className="text-3xl font-bold text-primary mb-2">1M+</div>
-            <div className="text-sm text-muted-foreground">Rows Processed</div>
-          </div>
-          <div className="text-center p-6 rounded-lg bg-secondary/5 border border-secondary/10">
-            <div className="text-3xl font-bold text-secondary mb-2">24/7</div>
-            <div className="text-sm text-muted-foreground">Automated</div>
-          </div>
+        <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6">
+          {[
+            { value: "10x", label: "Faster Analysis" },
+            { value: "95%", label: "Accuracy Rate" },
+            { value: "1M+", label: "Rows Processed" },
+            { value: "24/7", label: "Automated" }
+          ].map((stat, index) => (
+            <div 
+              key={stat.label}
+              className="text-center p-8 bg-background border border-border"
+            >
+              <div className="text-3xl font-semibold text-gradient mb-2">{stat.value}</div>
+              <div className="text-sm text-muted-foreground tracking-wide">{stat.label}</div>
+            </div>
+          ))}
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default DataPipeline;
