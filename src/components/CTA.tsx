@@ -18,10 +18,7 @@ const CTA = () => {
             <span className="block text-gradient mt-2">Data Into Growth?</span>
           </h2>
           
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-            Join thousands of companies already using AI-powered insights to make better decisions, 
-            faster. Start your free 14-day trial today—no credit card required.
-          </p>
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">Join thousands of companies already using AI-powered insights to make better decisions, faster. </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
             <Button variant="hero" size="lg" className="group min-w-[200px]" onClick={() => window.location.href = '/auth'}>
