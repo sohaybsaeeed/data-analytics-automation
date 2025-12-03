@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
+
 const CTA = () => {
-  return <section className="py-32 relative overflow-hidden">
+  return (
+    <section className="py-32 relative overflow-hidden">
       {/* Subtle background elements */}
       <div className="absolute inset-0 bg-gradient-to-b from-card via-background to-card" />
       <div className="absolute top-1/2 left-1/4 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[150px]" />
@@ -13,23 +16,31 @@ const CTA = () => {
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-3xl mx-auto text-center space-y-10">
-          <h2 className="text-4xl md:text-6xl font-semibold leading-tight">
-            Ready to Transform Your
-            <span className="block text-gradient mt-2">Data Into Growth?</span>
-          </h2>
+          <ScrollReveal>
+            <h2 className="text-4xl md:text-6xl font-semibold leading-tight">
+              Ready to Transform Your
+              <span className="block text-gradient mt-2">Data Into Growth?</span>
+            </h2>
+          </ScrollReveal>
           
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">Join thousands of companies already using AI-powered insights to make better decisions, faster. </p>
+          <ScrollReveal delay={0.2}>
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              Join thousands of companies already using AI-powered insights to make better decisions, faster.
+            </p>
+          </ScrollReveal>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button variant="hero" size="lg" className="group min-w-[200px]" onClick={() => window.location.href = '/auth'}>
-              Get Started Free
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </div>
-          
-          
+          <ScrollReveal delay={0.4}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+              <Button variant="hero" size="lg" className="group min-w-[200px]" onClick={() => window.location.href = '/auth'}>
+                Get Started Free
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </div>
+          </ScrollReveal>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default CTA;
