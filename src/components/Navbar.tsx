@@ -2,10 +2,20 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
 const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const targetId = href.replace('#', '');
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <motion.a
       href={href}
-      className="relative text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+      onClick={handleClick}
+      className="relative text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2 cursor-pointer"
       whileHover="hover"
     >
       {children}
