@@ -1,9 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Minus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const plans = [
   {
@@ -55,6 +63,39 @@ const plans = [
     cta: "Get Started",
     popular: false,
   },
+];
+
+const comparisonFeatures = [
+  { category: "Data Sources", features: [
+    { name: "Data source connections", basic: "Up to 10", professional: "Unlimited", premium: "Unlimited" },
+    { name: "Cloud storage integration", basic: true, professional: true, premium: true },
+    { name: "Database connections", basic: true, professional: true, premium: true },
+    { name: "Custom integrations", basic: false, professional: false, premium: true },
+  ]},
+  { category: "Storage & Retention", features: [
+    { name: "Data storage", basic: "100 GB", professional: "500 GB", premium: "Unlimited" },
+    { name: "Data retention", basic: "14 days", professional: "60 days", premium: "Unlimited" },
+    { name: "Backup frequency", basic: "Weekly", professional: "Daily", premium: "Real-time" },
+  ]},
+  { category: "AI & Analytics", features: [
+    { name: "AI insights", basic: "Basic", professional: "Advanced", premium: "Custom models" },
+    { name: "Visualizations", basic: "Standard", professional: "Custom", premium: "White-label" },
+    { name: "Statistical analysis", basic: true, professional: true, premium: true },
+    { name: "Machine learning models", basic: false, professional: true, premium: true },
+    { name: "Custom AI training", basic: false, professional: false, premium: true },
+  ]},
+  { category: "Collaboration & Security", features: [
+    { name: "Team collaboration", basic: false, professional: true, premium: true },
+    { name: "API access", basic: false, professional: true, premium: true },
+    { name: "SSO authentication", basic: false, professional: false, premium: true },
+    { name: "Advanced security", basic: false, professional: false, premium: true },
+    { name: "Audit logs", basic: false, professional: true, premium: true },
+  ]},
+  { category: "Support", features: [
+    { name: "Support type", basic: "Email", professional: "Priority", premium: "Dedicated" },
+    { name: "Response time", basic: "48 hours", professional: "4 hours", premium: "1 hour" },
+    { name: "Onboarding assistance", basic: false, professional: true, premium: true },
+  ]},
 ];
 
 const ANNUAL_DISCOUNT = 0.2; // 20% discount
@@ -224,6 +265,81 @@ const Pricing = () => {
               </Card>
             </motion.div>
           ))}
+        </motion.div>
+
+        {/* Comparison Table */}
+        <motion.div
+          className="mt-24 max-w-6xl mx-auto"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+        >
+          <h3 className="text-3xl font-bold text-center mb-12">
+            Compare All Features
+          </h3>
+          
+          <Card className="overflow-hidden border-border/50">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="w-[300px] font-semibold">Feature</TableHead>
+                  <TableHead className="text-center font-semibold">Basic</TableHead>
+                  <TableHead className="text-center font-semibold bg-primary/5">Professional</TableHead>
+                  <TableHead className="text-center font-semibold">Premium</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {comparisonFeatures.map((category, categoryIndex) => (
+                  <>
+                    <TableRow key={`category-${categoryIndex}`} className="bg-muted/30">
+                      <TableCell colSpan={4} className="font-semibold text-foreground">
+                        {category.category}
+                      </TableCell>
+                    </TableRow>
+                    {category.features.map((feature, featureIndex) => (
+                      <TableRow key={`feature-${categoryIndex}-${featureIndex}`} className="hover:bg-muted/20 transition-colors">
+                        <TableCell className="text-muted-foreground">{feature.name}</TableCell>
+                        <TableCell className="text-center">
+                          {typeof feature.basic === 'boolean' ? (
+                            feature.basic ? (
+                              <Check className="w-5 h-5 text-primary mx-auto" />
+                            ) : (
+                              <Minus className="w-5 h-5 text-muted-foreground/50 mx-auto" />
+                            )
+                          ) : (
+                            <span className="text-sm">{feature.basic}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center bg-primary/5">
+                          {typeof feature.professional === 'boolean' ? (
+                            feature.professional ? (
+                              <Check className="w-5 h-5 text-primary mx-auto" />
+                            ) : (
+                              <Minus className="w-5 h-5 text-muted-foreground/50 mx-auto" />
+                            )
+                          ) : (
+                            <span className="text-sm font-medium">{feature.professional}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {typeof feature.premium === 'boolean' ? (
+                            feature.premium ? (
+                              <Check className="w-5 h-5 text-primary mx-auto" />
+                            ) : (
+                              <Minus className="w-5 h-5 text-muted-foreground/50 mx-auto" />
+                            )
+                          ) : (
+                            <span className="text-sm">{feature.premium}</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
         </motion.div>
       </div>
     </section>
