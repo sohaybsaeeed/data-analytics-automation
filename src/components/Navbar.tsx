@@ -44,6 +44,7 @@ const Navbar = () => {
           >
             <NavLink href="#features">Features</NavLink>
             <NavLink href="#how-it-works">How It Works</NavLink>
+            <NavLink href="#pricing">Pricing</NavLink>
           </motion.div>
           
           <motion.div 

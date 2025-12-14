@@ -4,8 +4,8 @@ import { Check } from "lucide-react";
 
 const plans = [
   {
-    name: "Starter",
-    price: "49",
+    name: "Basic",
+    price: "250",
     description: "Perfect for individuals and small teams",
     features: [
       "Up to 10 data sources",
@@ -13,14 +13,14 @@ const plans = [
       "Basic AI insights",
       "Standard visualizations",
       "Email support",
-      "7-day data retention",
+      "14-day data retention",
     ],
-    cta: "Start Free Trial",
+    cta: "Get Started",
     popular: false,
   },
   {
     name: "Professional",
-    price: "149",
+    price: "500",
     description: "For growing businesses with complex data",
     features: [
       "Unlimited data sources",
@@ -28,17 +28,17 @@ const plans = [
       "Advanced AI insights",
       "Custom visualizations",
       "Priority support",
-      "30-day data retention",
+      "60-day data retention",
       "Team collaboration",
       "API access",
     ],
-    cta: "Start Free Trial",
+    cta: "Get Started",
     popular: true,
   },
   {
-    name: "Enterprise",
-    price: "Custom",
-    description: "Tailored solutions for large organizations",
+    name: "Premium",
+    price: "1000",
+    description: "Complete solution for large organizations",
     features: [
       "Everything in Professional",
       "Unlimited data storage",
@@ -49,14 +49,15 @@ const plans = [
       "SSO & advanced security",
       "Custom integrations",
     ],
-    cta: "Contact Sales",
+    cta: "Get Started",
     popular: false,
   },
 ];
 
 const Pricing = () => {
   return (
-    <section className="py-24 bg-gradient-to-b from-muted/20 to-background">
+    <section id="pricing" className="py-24 bg-gradient-to-b from-muted/20 to-background">
+    
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
