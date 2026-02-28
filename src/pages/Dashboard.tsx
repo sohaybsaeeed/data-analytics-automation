@@ -266,10 +266,16 @@ const Dashboard = () => {
               </div>
               <span className="text-xl font-bold">Data Analytics Automation</span>
             </div>
-            <Button variant="ghost" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
+             <div className="flex items-center gap-2">
+               <Button variant="outline" size="sm" onClick={() => navigate("/data-engineering")}>
+                 <Database className="w-4 h-4 mr-2" />
+                 Data Engineering
+               </Button>
+               <Button variant="ghost" onClick={handleSignOut}>
+                 <LogOut className="w-4 h-4 mr-2" />
+                 Sign Out
+               </Button>
+             </div>
           </div>
         </div>
       </nav>
