@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
+import CloudServices from "@/components/CloudServices";
 import DataSources from "@/components/DataSources";
 import DataPipeline from "@/components/DataPipeline";
 import Pricing from "@/components/Pricing";
@@ -16,6 +17,7 @@ const Index = () => {
         <div id="features">
           <Features />
         </div>
+        <CloudServices />
         <DataSources />
         <DataPipeline />
         <div id="how-it-works" />
