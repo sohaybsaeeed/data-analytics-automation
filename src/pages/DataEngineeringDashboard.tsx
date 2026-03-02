@@ -16,6 +16,7 @@ import {
   Settings, RefreshCw, Eye, CheckCircle2, XCircle, Clock,
   ArrowLeft
 } from "lucide-react";
+import { S3BucketBrowser } from "@/components/S3BucketBrowser";
 
 type ServiceStatus = "connected" | "disconnected" | "configuring";
 
@@ -352,6 +353,8 @@ const DataEngineeringDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+            {/* S3 Bucket Browser */}
+            <S3BucketBrowser />
           </TabsContent>
 
           {/* Multi-Cloud */}
