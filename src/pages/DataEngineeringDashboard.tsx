@@ -17,6 +17,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { S3BucketBrowser } from "@/components/S3BucketBrowser";
+import { AthenaQueryEditor } from "@/components/AthenaQueryEditor";
 
 type ServiceStatus = "connected" | "disconnected" | "configuring";
 
@@ -355,6 +356,9 @@ const DataEngineeringDashboard = () => {
             </Card>
             {/* S3 Bucket Browser */}
             <S3BucketBrowser />
+
+            {/* Athena Query Editor */}
+            <AthenaQueryEditor />
           </TabsContent>
 
           {/* Multi-Cloud */}
